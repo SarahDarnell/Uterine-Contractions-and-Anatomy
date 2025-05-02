@@ -78,6 +78,19 @@ eh16_all <- eh16_all %>%
   mutate(asian_race = ifelse((mh3_race___2 == "1") &
                                (multi_race != 1), 1, 0))
 
+<<<<<<< HEAD
+=======
+#adding 1000 to the record_number for merge later
+eh16_all <- eh16_all %>%
+  mutate(record_number = record_number + 1000)
+
+#converting back to a tibble
+eh16_clean <- as_tibble(eh16_all)
+
+#saving file
+write_csv(eh16_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_cleaned.csv")
+
+>>>>>>> ea3c9b53259dc359d11dcd547cdf3e84dd7c051e
 #adding new variable for black race, excluding those with multiple races
 eh16_all <- eh16_all %>%
   mutate(black_race = ifelse((mh3_race___4 == "1") &
@@ -88,6 +101,7 @@ eh16_all <- eh16_all %>%
   mutate(missing_race = ifelse((mh3_race___1 != "1") & (mh3_race___2 != "1") &
                                  (mh3_race___3 != "1") & (mh3_race___4 != "1") &
                                  (mh3_race___5 != "1") & (multi_race != 1), 1, 0))
+<<<<<<< HEAD
 
 #adding 1000 to the record_number for merge later
 eh16_all <- eh16_all %>%
@@ -98,3 +112,5 @@ eh16_clean <- as_tibble(eh16_all)
 
 #saving file
 write_csv(eh16_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_cleaned.csv")
+=======
+>>>>>>> ea3c9b53259dc359d11dcd547cdf3e84dd7c051e
