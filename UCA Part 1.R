@@ -48,3 +48,53 @@ eh16_wide <- eh16_wide %>%
                       mcgill1s, mcgill1t, mcgill1u, 
                       mcgill1v)) %>%
   ungroup()
+
+#import menses visit information from tracking log
+eh16_menses <- read_csv("EH16_263_MRI_pain_fixed.csv")
+
+#merge menses variables with rest of dataset
+eh16_all <- merge(eh16_wide, eh16_menses, all = TRUE)
+
+##recoding race categories##
+
+#adding variable for multi race
+eh16_all <- eh16_all %>%
+  mutate(multi_race = ifelse(rowSums(
+    select(., mh3_race___1:mh3_race___5)) > 1, 1, 0))
+
+#adding variable for other race, excluding those with multiple races
+eh16_all <- eh16_all %>%
+  mutate(other_race = ifelse((mh3_race___1 == "1") |
+                               (mh3_race___3 == "1") &
+                               (multi_race != 1), 1, 0))
+
+#adding new variable for white race, excluding those with multiple races
+eh16_all <- eh16_all %>%
+  mutate(white_race = ifelse((mh3_race___5 == "1") &
+                               (multi_race != 1), 1, 0))
+
+#adding new variable for asian race, excluding those with multiple races
+eh16_all <- eh16_all %>%
+  mutate(asian_race = ifelse((mh3_race___2 == "1") &
+                               (multi_race != 1), 1, 0))
+
+#adding new variable for black race, excluding those with multiple races
+eh16_all <- eh16_all %>%
+  mutate(black_race = ifelse((mh3_race___4 == "1") &
+                               (multi_race != 1), 1, 0))
+
+#adding new variable for missing race, excluding those with multiple races
+eh16_all <- eh16_all %>%
+  mutate(missing_race = ifelse((mh3_race___1 != "1") & (mh3_race___2 != "1") &
+                                 (mh3_race___3 != "1") & (mh3_race___4 != "1") &
+                                 (mh3_race___5 != "1") & (multi_race != 1), 1, 0))
+
+#adding 1000 to the record_number for merge later
+eh16_all <- eh16_all %>%
+  mutate(record_number = record_number + 1000)
+
+#converting back to a tibble
+eh16_clean <- as_tibble(eh16_all)
+
+#saving file
+write_csv(eh16_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_cleaned.csv")
