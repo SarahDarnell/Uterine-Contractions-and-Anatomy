@@ -224,6 +224,10 @@ eh19_wide <- eh19_wide %>%
   mutate(ps_record_id = ps_record_id + 3000) %>%
   rename(record_number = 1)
 
+#removing test records (3001 & 3002)
+eh19_wide <- eh19_wide %>%
+  filter(record_number > 3002)
+
 #converting back to a tibble
 eh19_clean <- as_tibble(eh19_wide)
 
