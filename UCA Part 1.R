@@ -79,17 +79,6 @@ eh16_all <- eh16_all %>%
                                (multi_race != 1), 1, 0))
 
 
-#adding 1000 to the record_number for merge later
-eh16_all <- eh16_all %>%
-  mutate(record_number = record_number + 1000)
-
-#converting back to a tibble
-eh16_clean <- as_tibble(eh16_all)
-
-#saving file
-write_csv(eh16_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_cleaned.csv")
-
-
 #adding new variable for black race, excluding those with multiple races
 eh16_all <- eh16_all %>%
   mutate(black_race = ifelse((mh3_race___4 == "1") &
@@ -101,10 +90,9 @@ eh16_all <- eh16_all %>%
                                  (mh3_race___3 != "1") & (mh3_race___4 != "1") &
                                  (mh3_race___5 != "1") & (multi_race != 1), 1, 0))
 
-
-#adding 1000 to the record_number for merge later
+#adding 2000 to the record_number for merge later
 eh16_all <- eh16_all %>%
-  mutate(record_number = record_number + 1000)
+  mutate(record_number = record_number + 2000)
 
 #removing test records (2001 & 2002)
 eh16_all <- eh16_all %>%
@@ -116,3 +104,76 @@ eh16_clean <- as_tibble(eh16_all)
 #saving file
 write_csv(eh16_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_cleaned.csv")
 
+#load in contraction and anatomy data
+eh16_anatomy <- read_csv("eh16_anatomy.csv")
+
+#compute average of double-scored variables
+eh16_anatomy <- eh16_anatomy %>%
+  group_by(id_visit) %>%
+  mutate(avg_contractions = mean(number_contractions_nsaids)) %>%
+  mutate(avg_frame_duration = mean(mean_frame_duration)) %>%
+  mutate(avg_anterior_jz = mean(anterior_jz)) %>%
+  mutate(avg_anterior_outer = mean(anterior_outer)) %>%
+  mutate(avg_posterior_jz = mean(posterior_jz)) %>%
+  mutate(avg_posterior_outer = mean(posterior_outer)) %>%
+  ungroup()
+
+#remove second instance of each scan, grab only averaged variables for merge
+eh16_anatomy <- eh16_anatomy %>%
+  group_by(id_visit) %>%
+  slice_head() %>%
+  select(3, 8:11, 18:24)
+
+#isolate visit 1 variables
+eh16_anatomy_v1 <- eh16_anatomy %>%
+  group_by(record_number) %>%
+  slice_head()
+
+#rename visit 1 variables
+eh16_anatomy_v1 <- eh16_anatomy_v1 %>%
+  rename(avg_contractions_v1 = 7) %>%
+  rename(avg_frame_duration_v1 = 8) %>%
+  rename(avg_anterior_jz_v1 = 9) %>%
+  rename(avg_anterior_outer_v1 = 10) %>%
+  rename(avg_posterior_jz_v1 = 11) %>%
+  rename(avg_posterior_outer_v1 = 12)
+
+#isolate visit 2 variables
+eh16_anatomy_v2 <- eh16_anatomy %>%
+  group_by(record_number) %>%
+  slice_tail()
+
+#rename visit 1 variables
+eh16_anatomy_v2 <- eh16_anatomy_v2 %>%
+  rename(avg_contractions_v2 = 7) %>%
+  rename(avg_frame_duration_v2 = 8) %>%
+  rename(avg_anterior_jz_v2 = 9) %>%
+  rename(avg_anterior_outer_v2 = 10) %>%
+  rename(avg_posterior_jz_v2 = 11) %>%
+  rename(avg_posterior_outer_v2 = 12)
+
+#keep only contraction variables from visit 2
+eh16_anatomy_v2 <- eh16_anatomy_v2 %>%
+  select(6:12)
+
+#merge visit 1 and visit 2 variables, wide form
+eh16_anatomy_clean <- merge(eh16_anatomy_v1, eh16_anatomy_v2, all = TRUE)
+
+#remove visit_id variable to limit confusion now that in wide form
+eh16_anatomy_clean <- eh16_anatomy_clean %>%
+  select(!2)
+
+#converting back to a tibble
+eh16_anatomy_clean <- as_tibble(eh16_anatomy_clean)
+
+#saving file
+write_csv(eh16_anatomy_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_anatomy_cleaned.csv")           
+
+#merge eh16 redcap data with anatomy data
+eh16_full <- merge(eh16_clean, eh16_anatomy_clean, all = TRUE)
+
+#converting back to a tibble
+eh16_full <- as_tibble(eh16_full)
+
+#saving file
+write_csv(eh16_full, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH16-263_full_cleaned.csv")           
