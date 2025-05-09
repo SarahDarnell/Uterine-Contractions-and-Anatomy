@@ -143,7 +143,7 @@ eh16_anatomy_v2 <- eh16_anatomy %>%
   group_by(record_number) %>%
   slice_tail()
 
-#rename visit 1 variables
+#rename visit 2 variables
 eh16_anatomy_v2 <- eh16_anatomy_v2 %>%
   rename(avg_contractions_v2 = 7) %>%
   rename(avg_frame_duration_v2 = 8) %>%

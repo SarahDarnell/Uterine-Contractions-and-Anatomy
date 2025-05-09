@@ -233,3 +233,122 @@ eh19_clean <- as_tibble(eh19_wide)
 
 #saving file
 write_csv(eh19_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH19-040_cleaned.csv")
+
+#load in contraction and anatomy data
+eh19_anatomy <- read_csv("eh19_anatomy.csv")
+
+#compute average of double-scored variables
+eh19_anatomy <- eh19_anatomy %>%
+  group_by(id_visit_scan) %>%
+  mutate(avg_contractions = mean(number_contractions_nsaids)) %>%
+  mutate(avg_frame_duration = mean(mean_frame_duration)) %>%
+  mutate(avg_anterior_jz = mean(anterior_jz)) %>%
+  mutate(avg_anterior_outer = mean(anterior_outer)) %>%
+  mutate(avg_posterior_jz = mean(posterior_jz)) %>%
+  mutate(avg_posterior_outer = mean(posterior_outer)) %>%
+  ungroup()
+
+#remove second instance of each scan, grab only averaged variables for merge
+eh19_anatomy <- eh19_anatomy %>%
+  group_by(id_visit_scan) %>%
+  slice_head() %>%
+  select(5, 14:24)
+
+#isolate visit 1, scan 1 variables
+eh19_anatomy_v1s1 <- eh19_anatomy %>%
+  filter(id_visit_scan %% 100 == 11)
+
+#rename visit 1, scan 1 variables
+eh19_anatomy_v1s1 <- eh19_anatomy_v1s1 %>%
+  rename(avg_contractions_v1_s1 = 7) %>%
+  rename(avg_frame_duration_v1_s1 = 8) %>%
+  rename(avg_anterior_jz_v1_s1 = 9) %>%
+  rename(avg_anterior_outer_v1_s1 = 10) %>%
+  rename(avg_posterior_jz_v1_s1 = 11) %>%
+  rename(avg_posterior_outer_v1_s1 = 12)
+
+#isolate visit 1, scan 2 variables (contraction variables only)
+eh19_anatomy_v1s2 <- eh19_anatomy %>%
+  filter(id_visit_scan %% 100 == 12) %>%
+  select(1:2, 7:12)
+
+#rename visit 1, scan 2 variables
+eh19_anatomy_v1s2 <- eh19_anatomy_v1s2 %>%
+  rename(avg_contractions_v1_s2 = 3) %>%
+  rename(avg_frame_duration_v1_s2 = 4) %>%
+  rename(avg_anterior_jz_v1_s2 = 5) %>%
+  rename(avg_anterior_outer_v1_s2 = 6) %>%
+  rename(avg_posterior_jz_v1_s2 = 7) %>%
+  rename(avg_posterior_outer_v1_s2 = 8)
+
+#remove id_visit_scan variable for merge
+eh19_anatomy_v1s2 <- eh19_anatomy_v1s2 %>%
+  ungroup() %>%
+  select(-1)
+
+#merge visit 1 data together
+eh19_anatomy_v1 <- merge(eh19_anatomy_v1s1, eh19_anatomy_v1s2, all = TRUE)
+
+#isolate visit 2, scan 1 variables
+eh19_anatomy_v2s1 <- eh19_anatomy %>%
+  filter(id_visit_scan %% 100 == 21) %>%
+  select(1:2, 7:12)
+
+#rename visit 2, scan 1 variables
+eh19_anatomy_v2s1 <- eh19_anatomy_v2s1 %>%
+  rename(avg_contractions_v2_s1 = 3) %>%
+  rename(avg_frame_duration_v2_s1 = 4) %>%
+  rename(avg_anterior_jz_v2_s1 = 5) %>%
+  rename(avg_anterior_outer_v2_s1 = 6) %>%
+  rename(avg_posterior_jz_v2_s1 = 7) %>%
+  rename(avg_posterior_outer_v2_s1 = 8)
+
+#remove id_visit_scan variable for merge
+eh19_anatomy_v2s1 <- eh19_anatomy_v2s1 %>%
+  ungroup() %>%
+  select(-1)
+
+#isolate visit 2, scan 2 variables
+eh19_anatomy_v2s2 <- eh19_anatomy %>%
+  filter(id_visit_scan %% 100 == 22) %>%
+  select(1:2, 7:12)
+
+#rename visit 2, scan 2 variables
+eh19_anatomy_v2s2 <- eh19_anatomy_v2s2 %>%
+  rename(avg_contractions_v2_s2 = 3) %>%
+  rename(avg_frame_duration_v2_s2 = 4) %>%
+  rename(avg_anterior_jz_v2_s2 = 5) %>%
+  rename(avg_anterior_outer_v2_s2 = 6) %>%
+  rename(avg_posterior_jz_v2_s2 = 7) %>%
+  rename(avg_posterior_outer_v2_s2 = 8)
+
+#remove id_visit_scan variable for merge
+eh19_anatomy_v2s2 <- eh19_anatomy_v2s2 %>%
+  ungroup() %>%
+  select(-1)
+
+#merge visit 2 data together
+eh19_anatomy_v2 <- merge(eh19_anatomy_v2s1, eh19_anatomy_v2s2, all = TRUE)
+
+#merge visit 1 and visit 2 variables, wide form
+eh19_anatomy_clean <- merge(eh19_anatomy_v1, eh19_anatomy_v2, all = TRUE)
+
+#remove visit_id_scan variable to limit confusion now that in wide form
+eh19_anatomy_clean <- eh19_anatomy_clean %>%
+  select(!2)
+
+#converting back to a tibble
+eh19_anatomy_clean <- as_tibble(eh19_anatomy_clean)
+
+#saving file
+write_csv(eh19_anatomy_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH19-040_anatomy_cleaned.csv")     
+
+#merge eh19 redcap data with anatomy data
+eh19_full <- merge(eh19_clean, eh19_anatomy_clean, all = TRUE)
+
+#converting back to a tibble
+eh19_full <- as_tibble(eh19_full)
+
+#saving file
+write_csv(eh19_full, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH19-040_full_cleaned.csv")           
+
