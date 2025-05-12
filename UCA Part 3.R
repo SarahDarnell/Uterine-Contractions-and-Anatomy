@@ -204,9 +204,12 @@ uca <- uca %>%
   rename('McGill pain score visit 2' = "mcgill_MRI2") %>%
   rename('Worst menstrual pain last 12 months' = "werf_c10")
 
+<<<<<<< HEAD
 #saving file
 write_csv(uca, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/uca_final.csv")
 
+=======
+>>>>>>> 4cef6f08779a4ec1a008472b023a0e356a4c3eba
 #Creating demographics table, using tableone()
 vars <- c("Race", "Age", "Ethnicity", "Education", "Employment", 
           "Do you smoke cigarettes?", "Do you drink alcohol?", 
@@ -322,7 +325,11 @@ ft <- flextable(demo_df) %>%
 
 read_docx() %>%
   body_add_flextable(ft) %>%
+<<<<<<< HEAD
   print(target = "demo_table_study.docx") 
+=======
+  print(target = "demo_table_study.docx")
+>>>>>>> 4cef6f08779a4ec1a008472b023a0e356a4c3eba
 
 
 
