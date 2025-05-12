@@ -322,7 +322,7 @@ ft <- flextable(demo_df) %>%
 
 read_docx() %>%
   body_add_flextable(ft) %>%
-  print(target = "demo_table_study.docx")
+  print(target = "demo_table_study.docx") 
 
 
 
