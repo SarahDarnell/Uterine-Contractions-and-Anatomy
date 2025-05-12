@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 2 - EH19-040
-#Written by Sarah Darnell, began 5.2.25, lasted edited 5.2.25
+#Written by Sarah Darnell, began 5.2.25, lasted edited 5.12.25
 
 library(readr)
 library(dplyr)
@@ -345,6 +345,11 @@ write_csv(eh19_anatomy_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Da
 
 #merge eh19 redcap data with anatomy data
 eh19_full <- merge(eh19_clean, eh19_anatomy_clean, all = TRUE)
+
+#remove records not in contraction dataset
+eh19_full <- eh19_full %>%
+  filter(record_number != 3239) %>%
+  filter(record_number != 3265)
 
 #converting back to a tibble
 eh19_full <- as_tibble(eh19_full)
