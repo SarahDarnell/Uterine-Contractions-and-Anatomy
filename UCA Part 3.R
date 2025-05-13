@@ -204,12 +204,37 @@ uca <- uca %>%
   rename('McGill pain score visit 2' = "mcgill_MRI2") %>%
   rename('Worst menstrual pain last 12 months' = "werf_c10")
 
-<<<<<<< HEAD
+#cleaning up primary and secondary group names
+uca <- uca %>%
+  mutate(group_primary = case_when(
+    tolower(group_primary) %in% c("endo") ~ "Endometriosis",
+    tolower(group_primary) %in% c("dys") ~ "Dysmenorrhea", 
+    tolower(group_primary) %in% c("cpp") ~ "Chronic Pelvic Pain",
+    tolower(group_primary) %in% c("hc") ~ "Healthy Control",
+    tolower(group_primary) %in% c("fibroids") ~ "Fibroid"
+  ))
+
+uca <- uca %>%
+  mutate(group_secondary = case_when(
+    tolower(group_secondary) %in% c("adenomyosis") ~ "Adenomyosis",
+    tolower(group_secondary) %in% c("endo", "endometriosis") ~ "Endometriosis",
+    tolower(group_secondary) %in% c("dys") ~ "Dysmenorrhea", 
+    tolower(group_secondary) %in% c("hc") ~ "Healthy Control",
+    tolower(group_secondary) %in% c("fibroids", "fibroid") ~ "Fibroid"
+  ))
+
+
+#creating group column for table 1 that uses secondary for eh16 and primary for eh19
+uca <- uca %>%
+  mutate(t1group = case_when(
+    record_number < 3000 ~ group_secondary, 
+    record_number > 3000 ~ group_primary
+  ))
+
 #saving file
 write_csv(uca, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/uca_final.csv")
 
-=======
->>>>>>> 4cef6f08779a4ec1a008472b023a0e356a4c3eba
+
 #Creating demographics table, using tableone()
 vars <- c("Race", "Age", "Ethnicity", "Education", "Employment", 
           "Do you smoke cigarettes?", "Do you drink alcohol?", 
@@ -257,8 +282,9 @@ factors <- c("Race", "Ethnicity", "Education", "Unemployment",
              "Migraine Headaches", "Hypertension", "Arthritis", "Lower Back Pain", 
              "Cancer", "Diabetes", "Fibromyalgia")
 
-demo <- CreateTableOne(vars, data = uca, factorVars = factors, strata = "study") 
-#change strata argument to "study" or "group" based on what is needed
+
+demo <- CreateTableOne(vars, data = uca, factorVars = factors, strata = "t1group") 
+#change strata argument to "study" or "t1group" based on what is needed
 
 print(demo, nonnormal = c("Age", "BMI", 
                           "Average menstrual pain (last 90 days without pain relievers)", 
@@ -325,11 +351,8 @@ ft <- flextable(demo_df) %>%
 
 read_docx() %>%
   body_add_flextable(ft) %>%
-<<<<<<< HEAD
-  print(target = "demo_table_study.docx") 
-=======
-  print(target = "demo_table_study.docx")
->>>>>>> 4cef6f08779a4ec1a008472b023a0e356a4c3eba
+  print(target = "demo_table_group.docx") 
+
 
 
 
