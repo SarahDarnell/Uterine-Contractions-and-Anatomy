@@ -32,8 +32,13 @@ contvar<- c("avg_contractions_v1", "avg_frame_duration_v1", "avg_anterior_jz_v1"
             "avg_contractions_v2_s2", "avg_frame_duration_v2_s2", "avg_anterior_jz_v2_s2", 
             "avg_anterior_outer_v2_s2", "avg_posterior_jz_v2_s2", "avg_posterior_outer_v2_s2")
 
+#Remove nonmenses visits from eh16
+
+uca_filtered_menses <- uca %>%
+  filter(menses == 1 | is.na(menses))
+
 ##Table 2b - median results from endo and fibroid groups##
-table2b <- uca %>%
+table2b <- uca_filtered_menses %>%
   select(all_of(contvar), t1group) %>%
   filter(!t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
   group_by(t1group) %>%
