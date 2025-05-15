@@ -1,5 +1,5 @@
-#Uterine Contractions and Anatomy Analysis - Part 3 - Full dataset
-#Written by Sarah Darnell, began 5.12.25, lasted edited 5.12.25
+#Uterine Contractions and Anatomy Analysis - Part 3 - Full dataset - table 1s
+#Written by Sarah Darnell, began 5.12.25, lasted edited 5.15.25
 
 library(readr)
 library(tableone)
@@ -207,19 +207,19 @@ uca <- uca %>%
 #cleaning up primary and secondary group names
 uca <- uca %>%
   mutate(group_primary = case_when(
-    tolower(group_primary) %in% c("endo") ~ "Endometriosis",
-    tolower(group_primary) %in% c("dys") ~ "Dysmenorrhea", 
-    tolower(group_primary) %in% c("cpp") ~ "Chronic Pelvic Pain",
-    tolower(group_primary) %in% c("hc") ~ "Healthy Control",
-    tolower(group_primary) %in% c("fibroids") ~ "Fibroid"
+    tolower(group_primary) %in% c("endo", "endometriosis") ~ "Endometriosis",
+    tolower(group_primary) %in% c("dys", "dysmenorrhea") ~ "Dysmenorrhea", 
+    tolower(group_primary) %in% c("cpp", "chronic pelvic pain") ~ "Chronic Pelvic Pain",
+    tolower(group_primary) %in% c("hc", "healthy control") ~ "Pain Free Control",
+    tolower(group_primary) %in% c("fibroids", "fibroid") ~ "Fibroid"
   ))
 
 uca <- uca %>%
   mutate(group_secondary = case_when(
     tolower(group_secondary) %in% c("adenomyosis") ~ "Adenomyosis",
     tolower(group_secondary) %in% c("endo", "endometriosis") ~ "Endometriosis",
-    tolower(group_secondary) %in% c("dys") ~ "Dysmenorrhea", 
-    tolower(group_secondary) %in% c("hc") ~ "Healthy Control",
+    tolower(group_secondary) %in% c("dys", "dysmenorrhea") ~ "Dysmenorrhea", 
+    tolower(group_secondary) %in% c("hc", "healthy control") ~ "Pain Free Control",
     tolower(group_secondary) %in% c("fibroids", "fibroid") ~ "Fibroid"
   ))
 
@@ -231,11 +231,19 @@ uca <- uca %>%
     record_number > 3000 ~ group_primary
   ))
 
+#creating a group column from group_secondary that only pulls from eh19
+uca <- uca %>%
+  mutate(group_secondary_eh19 = case_when(
+    record_number > 3000 ~ group_secondary
+  ))
+
 #saving file
 write_csv(uca, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/uca_final.csv")
 
 
 #Creating demographics table, using tableone()
+##for study table, add "t1group" to vars and factors
+##for group table, replace with "group_secondary_eh19"
 vars <- c("Race", "Age", "Ethnicity", "Education", "Employment", 
           "Do you smoke cigarettes?", "Do you drink alcohol?", 
           "Average menstrual pain (last 90 days without pain relievers)", 
@@ -250,7 +258,12 @@ vars <- c("Race", "Age", "Ethnicity", "Education", "Employment",
           "Dysmenorrhea", "Kidney Stones", "Inflammatory Bowel Disease", 
           "Irritable Bowel Disease", "Chronic Constipation", "Chronic Diarrhea", 
           "Migraine Headaches", "Hypertension", "Arthritis", "Lower Back Pain", 
-          "Cancer", "Diabetes", "Fibromyalgia", "Visit 1: Baseline pain between cramps", 
+          "Cancer", "Diabetes", "Fibromyalgia", "Days of menstrual pain in an average month",
+          "Sharp menstrual pain severity", "Pressing menstrual pain severity", 
+          "Dull menstrual pain severity", "Prickling menstrual pain severity",
+          "McGill pain score menses visit", "McGill pain score visit 1", 
+          "McGill pain score visit 2", "Worst menstrual pain last 12 months",
+          "Visit 1: Baseline pain between cramps", 
           "Visit 1: Baseline maximum cramping pain", "Visit 1: Pain between cramps scan 1", 
           "Visit 1: Maximum cramping pain scan 1", "Visit 1: Pain between cramps 90-minutes post drug",
           "Visit 1: Maximum cramping pain 90-minutes post drug", "Visit 1: Pain between cramps pre scan 2", 
@@ -264,11 +277,8 @@ vars <- c("Race", "Age", "Ethnicity", "Education", "Employment",
           "Menses Visit: Baseline maximum cramping pain", "Menses Visit: Average cramping pain post scan", 
           "Menses Visit: Maximum cramping pain post scan", "Non-menses Visit: Baseline average cramping pain", 
           "Non-menses Visit: Baseline maximum cramping pain", "Non-menses Visit: Average cramping pain post scan",
-          "Non-menses Visit: Maximum cramping pain post scan", "Days of menstrual pain in an average month",
-          "Sharp menstrual pain severity", "Pressing menstrual pain severity", 
-          "Dull menstrual pain severity", "Prickling menstrual pain severity",
-          "McGill pain score menses visit", "McGill pain score visit 1", 
-          "McGill pain score visit 2", "Worst menstrual pain last 12 months")
+          "Non-menses Visit: Maximum cramping pain post scan",
+          "group_secondary_eh19")
 
 factors <- c("Race", "Ethnicity", "Education", "Unemployment", 
              "Do you smoke cigarettes?", "Do you drink alcohol?", 
@@ -280,7 +290,7 @@ factors <- c("Race", "Ethnicity", "Education", "Unemployment",
              "Dysmenorrhea", "Kidney Stones", "Inflammatory Bowel Disease", 
              "Irritable Bowel Disease", "Chronic Constipation", "Chronic Diarrhea", 
              "Migraine Headaches", "Hypertension", "Arthritis", "Lower Back Pain", 
-             "Cancer", "Diabetes", "Fibromyalgia")
+             "Cancer", "Diabetes", "Fibromyalgia", "group_secondary_eh19")
 
 
 demo <- CreateTableOne(vars, data = uca, factorVars = factors, strata = "t1group") 
@@ -288,7 +298,8 @@ demo <- CreateTableOne(vars, data = uca, factorVars = factors, strata = "t1group
 
 print(demo, nonnormal = c("Age", "BMI", 
                           "Average menstrual pain (last 90 days without pain relievers)", 
-                          "Average menstrual pain (last 90 days with use of NSAIDs)"), showAllLevels = TRUE)
+                          "Average menstrual pain (last 90 days with use of NSAIDs)"), 
+      showAllLevels = TRUE, contDigits = 1)
  
 #to save file for exporting
 demo_df <- as.data.frame(print(demo, 
@@ -298,7 +309,8 @@ demo_df <- as.data.frame(print(demo,
                                printToggle = FALSE,
                                quote = FALSE,
                                noSpaces = TRUE,
-                               showAllLevels = TRUE))
+                               showAllLevels = TRUE, 
+                               contDigits = 1))
 
 #chat gpt wrote this part
 # Remove p-value/test columns
