@@ -8,6 +8,8 @@ library(dplyr)
 library(flextable)
 library(officer)
 library(tidyr)
+library(ggplot2)
+
 
 
 setwd("C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy")
@@ -33,7 +35,6 @@ contvar<- c("avg_contractions_v1", "avg_frame_duration_v1", "avg_anterior_jz_v1"
             "avg_anterior_outer_v2_s2", "avg_posterior_jz_v2_s2", "avg_posterior_outer_v2_s2")
 
 #Remove nonmenses visits from eh16
-
 uca_filtered_menses <- uca %>%
   filter(menses == 1 | is.na(menses))
 
@@ -63,6 +64,33 @@ read_docx() %>%
   print(target = "table2b.docx")
 
 ##Table 2a - median results and kruskal wallis results for dys and hc
+
+#Remove DYs w/o pain, and HC w/ pain
+#visualize distribution of pain across variables for Dys/Hc
+
+painvar <- c("Menses Visit: Baseline average cramping pain", 
+             "Menses Visit: Baseline maximum cramping pain", 
+             "Visit 1: Baseline pain between cramps", 
+             "Visit 1: Baseline maximum cramping pain", 
+             "Visit 2: Baseline pain between cramps", 
+             "Visit 2: Baseline maximum cramping pain")
+
+uca_pain <- uca_filtered_menses %>%
+  select(all_of(painvar), t1group) %>%
+  filter(!t1group %in% c("Fibroid", "Endometriosis")) %>%
+  pivot_longer(cols = -t1group, names_to = "Variable", values_to = "Value")
+
+ggplot(uca_pain, aes(x = t1group, y = Value, fill = t1group)) +
+  geom_boxplot() +
+  facet_wrap(~ Variable, scales = "free") +
+  labs(title = "Distribution of Pain Variables by Group",
+       x = "Group",
+       y = "Value") +
+  theme_minimal()
+
+
+##below here needs to be work shopped##
+
 table2a <- uca %>%
   select(all_of(contvar), t1group) %>%
   filter(!t1group %in% c("Fibroid", "Endometriosis")) %>%
