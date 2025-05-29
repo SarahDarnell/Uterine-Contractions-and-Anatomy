@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 1 - EH16-263
-#Written by Sarah Darnell, began 5.2.25, lasted edited 5.15.25
+#Written by Sarah Darnell, began 5.2.25, lasted edited 5.29.25
 
 library(readr)
 library(dplyr)
@@ -136,7 +136,8 @@ eh16_anatomy_v1 <- eh16_anatomy_v1 %>%
   rename(avg_anterior_jz_v1 = 10) %>%
   rename(avg_anterior_outer_v1 = 11) %>%
   rename(avg_posterior_jz_v1 = 12) %>%
-  rename(avg_posterior_outer_v1 = 13)
+  rename(avg_posterior_outer_v1 = 13) %>%
+  rename(menses_v1 = 2)
 
 #isolate visit 2 variables
 eh16_anatomy_v2 <- eh16_anatomy %>%
@@ -150,11 +151,12 @@ eh16_anatomy_v2 <- eh16_anatomy_v2 %>%
   rename(avg_anterior_jz_v2 = 10) %>%
   rename(avg_anterior_outer_v2 = 11) %>%
   rename(avg_posterior_jz_v2 = 12) %>%
-  rename(avg_posterior_outer_v2 = 13)
+  rename(avg_posterior_outer_v2 = 13) %>%
+  rename(menses_v2 = 2)
 
 #keep only contraction variables from visit 2
 eh16_anatomy_v2 <- eh16_anatomy_v2 %>%
-  select(8:13)
+  select(2, 8:13)
 
 #merge visit 1 and visit 2 variables, wide form
 eh16_anatomy_clean <- merge(eh16_anatomy_v1, eh16_anatomy_v2, all = TRUE)
