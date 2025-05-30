@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 4 - Full dataset - table 2s
-#Written by Sarah Darnell, began 5.15.25, lasted edited 5.29.25
+#Written by Sarah Darnell, began 5.15.25, lasted edited 5.30.25
 
 library(readr)
 library(tableone)
@@ -11,7 +11,6 @@ library(tidyr)
 library(ggplot2)
 
 
-
 setwd("C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy")
 
 #load in full dataset dataset
@@ -20,11 +19,9 @@ uca <- read_csv("uca_final.csv")
 #Convert t1group to a factor 
 uca$t1group <- as.factor(uca$t1group)
 
-#Define continuous variables
-contvar<- c("avg_contractions_v1", "avg_frame_duration_v1", "avg_anterior_jz_v1", 
-            "avg_anterior_outer_v1", "avg_posterior_jz_v1", "avg_posterior_outer_v1",
-            "avg_contractions_v2", "avg_frame_duration_v2", "avg_anterior_jz_v2", 
-            "avg_anterior_outer_v2", "avg_posterior_jz_v2", "avg_posterior_outer_v2", 
+#Define continuous variables for menses visits (eh16 and eh19)
+contvar_m <- c("avg_contractions_m", "avg_frame_duration_m", "avg_anterior_jz_m", 
+            "avg_anterior_outer_m", "avg_posterior_jz_m", "avg_posterior_outer_m",
             "avg_contractions_v1_s1", "avg_frame_duration_v1_s1", "avg_anterior_jz_v1_s1", 
             "avg_anterior_outer_v1_s1", "avg_posterior_jz_v1_s1", "avg_posterior_outer_v1_s1", 
             "avg_contractions_v1_s2", "avg_frame_duration_v1_s2", "avg_anterior_jz_v1_s2", 
@@ -35,47 +32,13 @@ contvar<- c("avg_contractions_v1", "avg_frame_duration_v1", "avg_anterior_jz_v1"
             "avg_anterior_outer_v2_s2", "avg_posterior_jz_v2_s2", "avg_posterior_outer_v2_s2")
 
 #Define continuous variables for nonmenses (eh16 only)
-contvar_nonmenses <- c("avg_contractions_v1", "avg_frame_duration_v1", "avg_anterior_jz_v1", 
-            "avg_anterior_outer_v1", "avg_posterior_jz_v1", "avg_posterior_outer_v1",
-            "avg_contractions_v2", "avg_frame_duration_v2", "avg_anterior_jz_v2", 
-            "avg_anterior_outer_v2", "avg_posterior_jz_v2", "avg_posterior_outer_v2")
+contvar_nm <- c("avg_contractions_nm", "avg_frame_duration_nm", "avg_anterior_jz_nm", 
+            "avg_anterior_outer_nm", "avg_posterior_jz_nm", "avg_posterior_outer_nm")
 
-
-#Note for table 2s: eh16 has 6 nm v1s and 13 nm v2s; in order to filter these out, 
-#i'll be pulling them out and than re-merging into menses and nonmenses datasets
-
-#this includes menses v1 and all eh19
-uca_menses_v1 <- uca %>% 
-  filter(menses_v1 == 1 | is.na(menses_v1)) %>%
-  select(!129:135)
-
-#this includes only menses v2 from eh16
-uca_menses_v2 <- uca %>%
-  filter(menses_v2 == 1) %>%
-  select(1, 117, 129:135, 202) %>%
-  mutate(record_number = record_number + 2000)
-
-#merge all menses visits together
-uca_menses <- merge(uca_menses_v1, uca_menses_v2, by = c("record_number", "t1group"), 
-                    all = TRUE)
-
-#this includes nonmenses v1 only for eh16
-uca_nonmenses_v1 <- uca %>% 
-  filter(menses_v1 == 0) %>%
-  select(1, 122:128, 202)
-
-#this includes nonmenses v2 only for eh16
-uca_nonmenses_v2 <- uca %>% 
-  filter(menses_v2 == 0) %>%
-  select(1, 129:135, 202)
-
-#merge all nonmenses visits together (only eh16)
-uca_nonmenses <- merge(uca_nonmenses_v1, uca_nonmenses_v2, by = c("record_number", "t1group"), 
-                       all = TRUE)
 
 ##Table 2b - median results from endo and fibroid groups, menses only##
-table2b <- uca_menses %>%
-  select(all_of(contvar), t1group) %>%
+table2b <- uca %>%
+  select(all_of(contvar_m), t1group) %>%
   filter(t1group %in% c("Endometriosis", "Fibroid")) %>%
   pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
   group_by(t1group, Item) %>%
@@ -99,11 +62,11 @@ read_docx() %>%
   print(target = "table2b.docx")
 
 ##Tables 2c-e will help determine what will be in final 2a##
-#These only include DYs and HC
+#These only include DYS and HC
 
 #table 2c - nonmenses data (eh16 only) for contvars
-table2c <- uca_nonmenses %>%
-  select(all_of(contvar_nonmenses), t1group) %>%
+table2c <- uca %>%
+  select(all_of(contvar_nm), t1group) %>%
   filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
   pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
   group_by(t1group, Item) %>%
@@ -115,10 +78,10 @@ table2c <- uca_nonmenses %>%
   pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
 
 #kruskal wallis test
-uca_filtered_groups <- uca_nonmenses %>%
+uca_filtered_groups <- uca %>%
   filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
 
-kw <- lapply(contvar_nonmenses, function(var) {
+kw <- lapply(contvar_nm, function(var) {
   formula <- as.formula(paste(var, "~t1group"))
   # Check if variable has enough data to run test
   temp <- uca_filtered_groups[, c(var, "t1group")]
@@ -138,26 +101,41 @@ kw <- lapply(contvar_nonmenses, function(var) {
   )
 })
 
-kw_results <- do.call(rbind, kw)
+kw_results <- do.call(rbind, kw) 
+kw_results <- kw_results %>%
+  select(-df)
 
-#remove df column, and add column with n for each variable
-n_values <- sapply(contvar_nonmenses, function(var) {
-  sum(!is.na(uca_filtered_groups[[var]]))
-})
-
-n_df <- data.frame(Variable = contvar_nonmenses, n = n_values, stringsAsFactors = FALSE)
-
-kw_results_no_df <- kw_results %>% select(-df)
-
-kw_results_final <- left_join(kw_results_no_df, n_df, by = "Variable")
 
 #combine into one table
 names(table2c)[1] <- "Variable"
 
-table2c_full <- left_join(table2c, kw_results_final, by = "Variable")
+table2c_full <- left_join(table2c, kw_results, by = "Variable")
+
+#add in n per group per variable
+n_long <- uca %>%
+  select(all_of(contvar_nm), t1group) %>%
+  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
+  pivot_longer(cols = -t1group, names_to = "Variable", values_to = "Value") %>%
+  dplyr::group_by(t1group, Variable) %>%
+  dplyr::summarize(n = sum(!is.na(Value)), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = t1group, values_from = n) %>%
+  dplyr::rename(
+    DYS_n = Dysmenorrhea,
+    HC_n = `Pain Free Control`
+  )
+
+# merge into table 2c
+table2c_full_n <- table2c_full %>%
+  left_join(n_long, by = "Variable") %>%
+  mutate(
+    Dysmenorrhea = paste0(Dysmenorrhea, " (n=", DYS_n, ")"),
+    `Pain Free Control` = paste0(`Pain Free Control`, " (n=", HC_n, ")")
+  ) %>%
+  select(Variable, Dysmenorrhea, `Pain Free Control`, Chi_Square, p_value)
+
 
 # Create a flextable object
-ft2 <- flextable(table2c_full) %>%
+ft2 <- flextable(table2c_full_n) %>%
   bold(i = 1, part = "header") %>%               # Bold the header row
   align(align = "left", part = "all") %>%         # Align left for all parts
   fontsize(size = 10, part = "all") %>%           # Set font size
@@ -167,6 +145,14 @@ ft2 <- flextable(table2c_full) %>%
 read_docx() %>%
   body_add_flextable(ft2) %>%
   print(target = "table2c.docx")
+
+
+
+##update from here below##
+
+
+
+
 
 #table 2d - only menses data for contvars
 table2d <- uca_menses %>%
