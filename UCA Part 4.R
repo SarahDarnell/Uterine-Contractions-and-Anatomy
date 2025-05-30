@@ -146,17 +146,9 @@ read_docx() %>%
   body_add_flextable(ft2) %>%
   print(target = "table2c.docx")
 
-
-
-##update from here below##
-
-
-
-
-
 #table 2d - only menses data for contvars
-table2d <- uca_menses %>%
-  select(all_of(contvar), t1group) %>%
+table2d <- uca %>%
+  select(all_of(contvar_m), t1group) %>%
   filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
   pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
   group_by(t1group, Item) %>%
@@ -167,12 +159,11 @@ table2d <- uca_menses %>%
                    .groups = "drop") %>%
   pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
 
-
 #kruskal wallis test
-uca_filtered_groups <- uca_menses %>%
+uca_filtered_groups <- uca %>%
   filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
 
-kw <- lapply(contvar, function(var) {
+kw <- lapply(contvar_m, function(var) {
   formula <- as.formula(paste(var, "~t1group"))
   # Check if variable has enough data to run test
   temp <- uca_filtered_groups[, c(var, "t1group")]
@@ -192,26 +183,41 @@ kw <- lapply(contvar, function(var) {
   )
 })
 
-kw_results <- do.call(rbind, kw)
+kw_results <- do.call(rbind, kw) 
+kw_results <- kw_results %>%
+  select(-df)
 
-#remove df column, and add column with n for each variable
-n_values <- sapply(contvar, function(var) {
-  sum(!is.na(uca_filtered_groups[[var]]))
-})
-
-n_df <- data.frame(Variable = contvar, n = n_values, stringsAsFactors = FALSE)
-
-kw_results_no_df <- kw_results %>% select(-df)
-
-kw_results_final <- left_join(kw_results_no_df, n_df, by = "Variable")
 
 #combine into one table
 names(table2d)[1] <- "Variable"
 
-table2d_full <- left_join(table2d, kw_results_final, by = "Variable")
+table2d_full <- left_join(table2d, kw_results, by = "Variable")
+
+#add in n per group per variable
+n_long <- uca %>%
+  select(all_of(contvar_m), t1group) %>%
+  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
+  pivot_longer(cols = -t1group, names_to = "Variable", values_to = "Value") %>%
+  dplyr::group_by(t1group, Variable) %>%
+  dplyr::summarize(n = sum(!is.na(Value)), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = t1group, values_from = n) %>%
+  dplyr::rename(
+    DYS_n = Dysmenorrhea,
+    HC_n = `Pain Free Control`
+  )
+
+# merge into table 2d
+table2d_full_n <- table2d_full %>%
+  left_join(n_long, by = "Variable") %>%
+  mutate(
+    Dysmenorrhea = paste0(Dysmenorrhea, " (n=", DYS_n, ")"),
+    `Pain Free Control` = paste0(`Pain Free Control`, " (n=", HC_n, ")")
+  ) %>%
+  select(Variable, Dysmenorrhea, `Pain Free Control`, Chi_Square, p_value)
+
 
 # Create a flextable object
-ft2 <- flextable(table2d_full) %>%
+ft2 <- flextable(table2d_full_n) %>%
   bold(i = 1, part = "header") %>%               # Bold the header row
   align(align = "left", part = "all") %>%         # Align left for all parts
   fontsize(size = 10, part = "all") %>%           # Set font size
@@ -225,18 +231,12 @@ read_docx() %>%
 #table 2e - only menses data for contvars, with HC not able to have 
 #pain over a 1, and dys having to have pain over a 2
 
-
-
-##this needs to be workshopped - not sure filtering correctly##
-##also need to change all tables to have n per group instead of per variable##
-
 #Remove HC w/pain and DYS w/o pain
-uca_filtered_menses_pain <- uca_menses %>%
+uca_filtered_pain <- uca_filtered_groups %>%
   filter(
       #EH16, DYS, pain > 2
       (t1group == "Dysmenorrhea" & study == "EH16" &
-          `Menses Visit: Maximum cramping pain post scan.x` > 2 |
-          `Menses Visit: Maximum cramping pain post scan.y` > 2)|
+          `Menses Visit: Maximum cramping pain post scan` > 2)|
       #EH19, DYS, pain > 2
       (t1group == "Dysmenorrhea" & study == "EH19" &
          (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
@@ -248,9 +248,8 @@ uca_filtered_menses_pain <- uca_menses %>%
          (is.na(`Visit 2: Maximum cramping pain scan 2`) | 
             `Visit 2: Maximum cramping pain scan 2` > 2)) |
       #EH16, HC, pain = 0
-        (t1group == "Dysmenorrhea" & study == "EH16" &
-           `Menses Visit: Maximum cramping pain post scan.x` == 0 |
-           `Menses Visit: Maximum cramping pain post scan.y` == 0)|
+        (t1group == "Pain Free Control" & study == "EH16" &
+           `Menses Visit: Maximum cramping pain post scan` == 0)|
       #EH19, HC, pain = 0
       (t1group == "Pain Free Control" & study == "EH19" &
          (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
@@ -262,9 +261,16 @@ uca_filtered_menses_pain <- uca_menses %>%
          (is.na(`Visit 2: Maximum cramping pain scan 2`) | 
             `Visit 2: Maximum cramping pain scan 2` == 0))
   )
-    
-table2e <- uca_filtered_menses_pain %>%
-  select(all_of(contvar), t1group) %>%
+
+#uncomment to view rows filtered out
+#filter_test <- anti_join(uca_filtered_groups, uca_filtered_pain)
+#filter_test_new <- filter_test %>%
+#  group_by(record_number) %>%
+#  select(1, 117, 146, 150, 157, 161, 187, 200) %>%
+#  ungroup()
+
+table2e <- uca_filtered_pain %>%
+  select(all_of(contvar_m), t1group) %>%
   filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
   pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
   group_by(t1group, Item) %>%
@@ -276,13 +282,10 @@ table2e <- uca_filtered_menses_pain %>%
   pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
 
 #kruskal wallis test
-uca_filtered_groups <- uca_filtered_menses_pain %>%
-  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
-
-kw <- lapply(contvar, function(var) {
+kw <- lapply(contvar_m, function(var) {
   formula <- as.formula(paste(var, "~t1group"))
   # Check if variable has enough data to run test
-  temp <- uca_filtered_groups[, c(var, "t1group")]
+  temp <- uca_filtered_pain[, c(var, "t1group")]
   temp <- temp[complete.cases(temp), ]  # remove NAs
   
   if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
@@ -299,26 +302,41 @@ kw <- lapply(contvar, function(var) {
   )
 })
 
-kw_results <- do.call(rbind, kw)
+kw_results <- do.call(rbind, kw) 
+kw_results <- kw_results %>%
+  select(-df)
 
-#remove df column, and add column with n for each variable
-n_values <- sapply(contvar, function(var) {
-  sum(!is.na(uca_filtered_groups[[var]]))
-})
-
-n_df <- data.frame(Variable = contvar, n = n_values, stringsAsFactors = FALSE)
-
-kw_results_no_df <- kw_results %>% select(-df)
-
-kw_results_final <- left_join(kw_results_no_df, n_df, by = "Variable")
 
 #combine into one table
 names(table2e)[1] <- "Variable"
 
-table2e_full <- left_join(table2e, kw_results_final, by = "Variable")
+table2e_full <- left_join(table2e, kw_results, by = "Variable")
+
+#add in n per group per variable
+n_long <- uca_filtered_pain %>%
+  select(all_of(contvar_m), t1group) %>%
+  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
+  pivot_longer(cols = -t1group, names_to = "Variable", values_to = "Value") %>%
+  dplyr::group_by(t1group, Variable) %>%
+  dplyr::summarize(n = sum(!is.na(Value)), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = t1group, values_from = n) %>%
+  dplyr::rename(
+    DYS_n = Dysmenorrhea,
+    HC_n = `Pain Free Control`
+  )
+
+# merge into table 2e
+table2e_full_n <- table2e_full %>%
+  left_join(n_long, by = "Variable") %>%
+  mutate(
+    Dysmenorrhea = paste0(Dysmenorrhea, " (n=", DYS_n, ")"),
+    `Pain Free Control` = paste0(`Pain Free Control`, " (n=", HC_n, ")")
+  ) %>%
+  select(Variable, Dysmenorrhea, `Pain Free Control`, Chi_Square, p_value)
+
 
 # Create a flextable object
-ft2 <- flextable(table2e_full) %>%
+ft2 <- flextable(table2e_full_n) %>%
   bold(i = 1, part = "header") %>%               # Bold the header row
   align(align = "left", part = "all") %>%         # Align left for all parts
   fontsize(size = 10, part = "all") %>%           # Set font size
