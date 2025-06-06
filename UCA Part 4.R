@@ -347,6 +347,151 @@ read_docx() %>%
   body_add_flextable(ft2) %>%
   print(target = "table2e.docx")
 
+#table 2f - menses visits only, HC pain must be 0, and DYS pain must be 3 or above
+#new variable that takes average of scan 1 pain across eh19 visits 1 and 2, and 
+#menses pain from eh16
+
+#make new variable called menses_scan_1_pain
+uca <- uca %>%
+  mutate(menses_scan_1_pain = case_when(
+    #eh16, menses visit, dys with pain of 3 or above
+    t1group == "Dysmenorrhea" & study == "EH16" & 
+      `Menses Visit: Maximum cramping pain post scan` > 2 ~ 
+      `Menses Visit: Maximum cramping pain post scan`, 
+    #eh16, menses visit, hc with pain of 0
+    t1group == "Pain Free Control" & study == "EH16" & 
+      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan`, 
+    #eh19, scan 1 of v1 and v2, dys with pain of 3 or above (averaged)
+    t1group == "Dysmenorrhea" & study == "EH19" &
+      `Visit 1: Maximum cramping pain scan 1` > 2 & 
+      `Visit 2: Maximum cramping pain scan 1` > 2 ~ 
+      rowMeans(cbind(`Visit 1: Maximum cramping pain scan 1`,
+                     `Visit 2: Maximum cramping pain scan 1` )), 
+    #eh19, scan 1 of v1 when v2 is NA or too low, dys with pain of 3 or above
+    t1group == "Dysmenorrhea" & study == "EH19" &
+      `Visit 1: Maximum cramping pain scan 1` > 2 & 
+      (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
+         `Visit 2: Maximum cramping pain scan 1` < 3) ~ 
+      `Visit 1: Maximum cramping pain scan 1`,
+    #eh19, scan 1 of v2 when v1 is NA or too low, dys with pain of 3 or above
+    t1group == "Dysmenorrhea" & study == "EH19" &
+      `Visit 2: Maximum cramping pain scan 1` > 2 & 
+      (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
+         `Visit 1: Maximum cramping pain scan 1` < 3) ~ 
+      `Visit 2: Maximum cramping pain scan 1`, 
+    #eh19, scan 1 of v1 and v2, hc with pain of 0
+    t1group == "Pain Free Control" & study == "EH19" &
+      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 0.0, 
+    #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
+    t1group == "Pain Free Control" & study == "EH19" &
+      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
+         `Visit 2: Maximum cramping pain scan 1` > 0) ~ 0.0, 
+    #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
+    t1group == "Pain Free Control" & study == "EH19" &
+      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
+         `Visit 1: Maximum cramping pain scan 1` > 0) ~ 0.0
+  ))
+
+#uncomment to view rows filtered out, dys and hc only
+#anti_2f_vars <- uca %>%
+ #group_by(record_number) %>%
+  #select(1, 117, 146, 157, 187, 200, 202) %>%
+  #ungroup() %>%
+  #slice(c(167, 165, 66, 34, 63, 83))
+
+#make new filtered uca dataset w/o N/A values in menses_scan_1_pain
+uca_filtered_menses_s1 <- uca %>%
+  filter(!is.na(menses_scan_1_pain))
+
+#Define continuous variables for menses visits (eh16 and eh19), menses and s1 only
+contvar_m_s1 <- c("avg_contractions_m", "avg_frame_duration_m", "avg_anterior_jz_m", 
+               "avg_anterior_outer_m", "avg_posterior_jz_m", "avg_posterior_outer_m",
+               "avg_contractions_v1_s1", "avg_frame_duration_v1_s1", "avg_anterior_jz_v1_s1", 
+               "avg_anterior_outer_v1_s1", "avg_posterior_jz_v1_s1", "avg_posterior_outer_v1_s1", 
+               "avg_contractions_v2_s1", "avg_frame_duration_v2_s1", "avg_anterior_jz_v2_s1", 
+               "avg_anterior_outer_v2_s1", "avg_posterior_jz_v2_s1", "avg_posterior_outer_v2_s1", 
+               "menses_scan_1_pain")
+
+table2f <- uca_filtered_menses_s1 %>%
+  select(all_of(contvar_m_s1), t1group) %>%
+  pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
+  group_by(t1group, Item) %>%
+  dplyr::summarize(`Median [IQR]` = sprintf("%.1f [%.1f-%.1f]", 
+                                            median(Value, na.rm = TRUE), 
+                                            quantile(Value, 0.25, na.rm = TRUE),
+                                            quantile(Value, 0.75, na.rm = TRUE)),
+                   .groups = "drop") %>%
+  pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
+
+#kruskal wallis test
+kw <- lapply(contvar_m_s1, function(var) {
+  formula <- as.formula(paste(var, "~t1group"))
+  # Check if variable has enough data to run test
+  temp <- uca_filtered_menses_s1[, c(var, "t1group")]
+  temp <- temp[complete.cases(temp), ]  # remove NAs
+  
+  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+    return(NULL)  # skip this variable
+  }
+  test_result <- kruskal.test(formula, data = temp)
+  
+  data.frame(
+    Variable = var, 
+    Chi_Square = test_result$statistic, 
+    df = test_result$parameter, 
+    p_value = test_result$p.value, 
+    stringsAsFactors = FALSE
+  )
+})
+
+kw_results <- do.call(rbind, kw) 
+kw_results <- kw_results %>%
+  select(-df)
+
+
+#combine into one table
+names(table2f)[1] <- "Variable"
+
+table2f_full <- left_join(table2f, kw_results, by = "Variable")
+
+#add in n per group per variable
+n_long <- uca_filtered_menses_s1 %>%
+  select(all_of(contvar_m_s1), t1group) %>%
+  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
+  pivot_longer(cols = -t1group, names_to = "Variable", values_to = "Value") %>%
+  dplyr::group_by(t1group, Variable) %>%
+  dplyr::summarize(n = sum(!is.na(Value)), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = t1group, values_from = n) %>%
+  dplyr::rename(
+    DYS_n = Dysmenorrhea,
+    HC_n = `Pain Free Control`
+  )
+
+# merge into table 2f
+table2f_full_n <- table2f_full %>%
+  left_join(n_long, by = "Variable") %>%
+  mutate(
+    Dysmenorrhea = paste0(Dysmenorrhea, " (n=", DYS_n, ")"),
+    `Pain Free Control` = paste0(`Pain Free Control`, " (n=", HC_n, ")")
+  ) %>%
+  select(Variable, Dysmenorrhea, `Pain Free Control`, Chi_Square, p_value)
+
+# Create a flextable object
+ft2 <- flextable(table2f_full_n) %>%
+  bold(i = 1, part = "header") %>%               # Bold the header row
+  align(align = "left", part = "all") %>%         # Align left for all parts
+  fontsize(size = 10, part = "all") %>%           # Set font size
+  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+  theme_vanilla()                                # Apply a vanilla theme
+
+read_docx() %>%
+  body_add_flextable(ft2) %>%
+  print(target = "table2f.docx")
+
 
 ##WAIT TO RUN UNTIL FINAL PARAMETERS DECIDED##
 ##Table 2a - median results and kruskal wallis results for dys and hc - menses only
