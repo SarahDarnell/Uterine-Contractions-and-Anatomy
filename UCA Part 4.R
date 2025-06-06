@@ -407,14 +407,44 @@ uca <- uca %>%
 uca_filtered_menses_s1 <- uca %>%
   filter(!is.na(menses_scan_1_pain))
 
+#combine menses contraction and jz zone info with average from eh19 into one var
+uca_filtered_menses_s1 <- uca_filtered_menses_s1 %>%
+  mutate(avg_contractions_m_s1 = case_when(
+    study == "EH16" ~ avg_contractions_m,
+    study == "EH19" ~ rowMeans(cbind(avg_contractions_v1_s1, avg_contractions_v2_s1), 
+                               na.rm = TRUE)
+  )) %>%
+  mutate(avg_frame_duration_m_s1 = case_when(
+    study == "EH16" ~ avg_frame_duration_m, 
+    study == "EH19" ~ rowMeans(cbind(avg_frame_duration_v1_s1, avg_frame_duration_v2_s1), 
+                               na.rm = TRUE)
+  )) %>%
+  mutate(avg_anterior_jz_m_s1 = case_when(
+    study == "EH16" ~ avg_anterior_jz_m, 
+    study == "EH19" ~ rowMeans(cbind(avg_anterior_jz_v1_s1, avg_anterior_jz_v2_s1), 
+                               na.rm = TRUE)
+  )) %>%
+  mutate(avg_anterior_outer_m_s1 = case_when(
+    study == "EH16" ~ avg_anterior_jz_m, 
+    study == "EH19" ~ rowMeans(cbind(avg_anterior_outer_v1_s1, avg_anterior_outer_v2_s1), 
+                               na.rm = TRUE)
+  )) %>%
+  mutate(avg_posterior_jz_m_s1 = case_when(
+    study == "EH16" ~ avg_posterior_jz_m, 
+    study == "EH19" ~ rowMeans(cbind(avg_posterior_jz_v1_s1, avg_posterior_jz_v2_s1), 
+                               na.rm = TRUE)
+  )) %>%
+  mutate(avg_posterior_outer_m_s1 = case_when(
+    study == "EH16" ~ avg_posterior_outer_m, 
+    study == "EH19" ~ rowMeans(cbind(avg_posterior_outer_v1_s1, avg_posterior_outer_v2_s1), 
+                               na.rm = TRUE)
+  ))
+  
+
+
 #Define continuous variables for menses visits (eh16 and eh19), menses and s1 only
-contvar_m_s1 <- c("avg_contractions_m", "avg_frame_duration_m", "avg_anterior_jz_m", 
-               "avg_anterior_outer_m", "avg_posterior_jz_m", "avg_posterior_outer_m",
-               "avg_contractions_v1_s1", "avg_frame_duration_v1_s1", "avg_anterior_jz_v1_s1", 
-               "avg_anterior_outer_v1_s1", "avg_posterior_jz_v1_s1", "avg_posterior_outer_v1_s1", 
-               "avg_contractions_v2_s1", "avg_frame_duration_v2_s1", "avg_anterior_jz_v2_s1", 
-               "avg_anterior_outer_v2_s1", "avg_posterior_jz_v2_s1", "avg_posterior_outer_v2_s1", 
-               "menses_scan_1_pain")
+contvar_m_s1 <- c("avg_contractions_m_s1", "avg_frame_duration_m_s1", "avg_anterior_jz_m_s1", 
+               "avg_anterior_outer_m_s1", "avg_posterior_jz_m_s1", "avg_posterior_outer_m_s1")
 
 table2f <- uca_filtered_menses_s1 %>%
   select(all_of(contvar_m_s1), t1group) %>%
