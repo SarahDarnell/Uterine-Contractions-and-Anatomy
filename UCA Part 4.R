@@ -789,6 +789,101 @@ read_docx() %>%
   body_add_flextable(ft2) %>%
   print(target = "table2f.docx")
 
+#Welch's t-test
+
+uca_m_s1_groups <- uca_m_s1 %>%
+  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
+
+ttest_results <- lapply(contvar_m_s1, function(var) {
+  formula <- as.formula(paste(var, "~t1group"))
+  temp <- uca_m_s1_groups[, c(var, "t1group")]
+  temp <- temp[complete.cases(temp), ]  # remove NAs
+  
+  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+    return(NULL)
+  }
+  # Perform Welch's t-test (handles unequal variances)
+  test_result <- t.test(formula, data = temp, var.equal = TRUE)
+  
+  data.frame(
+    Variable = var,
+    t_statistic = test_result$statistic,
+    df = test_result$parameter,
+    p_value = test_result$p.value,
+    mean_Dysmenorrhea = mean(temp[[var]][temp$t1group == "Dysmenorrhea"]),
+    mean_Control = mean(temp[[var]][temp$t1group == "Pain Free Control"]),
+    stringsAsFactors = FALSE
+  )
+})
+
+# Combine into a single data frame
+ttest_df <- do.call(rbind, ttest_results)
+
+# Create a flextable object
+ft2 <- flextable(ttest_df) %>%
+  bold(i = 1, part = "header") %>%               # Bold the header row
+  align(align = "left", part = "all") %>%         # Align left for all parts
+  fontsize(size = 10, part = "all") %>%           # Set font size
+  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+  theme_vanilla()                                # Apply a vanilla theme
+
+read_docx() %>%
+  body_add_flextable(ft2) %>%
+  print(target = "table2f_parametric_v2.docx")
+
+
+#boot strap test
+set.seed(123)  # for reproducibility
+
+bootstrap_median_results <- lapply(contvar_m_s1, function(var) {
+  temp <- uca_m_s1_groups[, c(var, "t1group")]
+  temp <- temp[complete.cases(temp), ]
+  
+  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+    return(NULL)
+  }
+  
+  # Split data
+  dys_vals <- temp[[var]][temp$t1group == "Dysmenorrhea"]
+  hc_vals <- temp[[var]][temp$t1group == "Pain Free Control"]
+  
+  # Observed difference in medians
+  obs_diff <- median(dys_vals) - median(hc_vals)
+  
+  # Bootstrap sampling
+  n_boot <- 10000
+  boot_diffs <- replicate(n_boot, {
+    median(sample(dys_vals, replace = TRUE)) - median(sample(hc_vals, replace = TRUE))
+  })
+  
+  # Two-sided p-value
+  p_boot <- mean(abs(boot_diffs) >= abs(obs_diff))
+  
+  data.frame(
+    Variable = var,
+    median_Dysmenorrhea = median(dys_vals),
+    median_Control = median(hc_vals),
+    observed_median_diff = obs_diff,
+    bootstrap_p_value = p_boot,
+    stringsAsFactors = FALSE
+  )
+})
+
+# Combine results into data frame
+bootstrap_median_df <- do.call(rbind, bootstrap_median_results)
+
+# Create a flextable object
+ft2 <- flextable(bootstrap_median_df) %>%
+  bold(i = 1, part = "header") %>%               # Bold the header row
+  align(align = "left", part = "all") %>%         # Align left for all parts
+  fontsize(size = 10, part = "all") %>%           # Set font size
+  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+  theme_vanilla()                                # Apply a vanilla theme
+
+read_docx() %>%
+  body_add_flextable(ft2) %>%
+  print(target = "table2f_bootstrap.docx")
+
 
 ##WAIT TO RUN UNTIL FINAL PARAMETERS DECIDED##
 ##Table 2a - median results and kruskal wallis results for dys and hc - menses only
