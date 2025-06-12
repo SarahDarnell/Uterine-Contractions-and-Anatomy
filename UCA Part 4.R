@@ -945,18 +945,18 @@ read_docx() %>%
 uca_m_s1_groups %>%
   count(t1group)
 
+contractions <- uca_m_s1_groups %>%
+  select(122, 163, 175, 200, 202)
+
 dys_zero <- uca_m_s1_groups %>%
-  filter(t1group == "Dysmenorrhea", avg_contractions_m_s1 == 0)
+  filter(t1group == "Dysmenorrhea"& avg_contractions_m_s1 == 0)
 
 dys_zero_half <- uca_m_s1_groups %>%
-  filter(t1group == "Dysmenorrhea", avg_contractions_m_s1 == 0.5)
+  filter(t1group == "Dysmenorrhea" & avg_contractions_m_s1 > 0 &
+           (avg_contractions_v1_s1 == 0 | avg_contractions_v2_s1 == 0))
 
 hc_zero <- uca_m_s1_groups %>%
   filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0)
-
-hc_zero_half <- uca_m_s1_groups %>%
-  filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0.5)
-
 
 
 ##WAIT TO RUN UNTIL FINAL PARAMETERS DECIDED##
