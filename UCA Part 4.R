@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 4 - Full dataset - table 2s
-#Written by Sarah Darnell, began 5.15.25, lasted edited 6.9.25
+#Written by Sarah Darnell, began 5.15.25, lasted edited 6.12.25
 
 library(readr)
 library(tableone)
@@ -883,6 +883,80 @@ ft2 <- flextable(bootstrap_median_df) %>%
 read_docx() %>%
   body_add_flextable(ft2) %>%
   print(target = "table2f_bootstrap.docx")
+
+#permutation
+set.seed(123)  # for reproducibility
+
+# Permutation test of median differences
+permutation_median_results <- lapply(contvar_m_s1, function(var) {
+  temp <- uca_m_s1_groups[, c(var, "t1group")]
+  temp <- temp[complete.cases(temp), ]
+  
+  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+    return(NULL)
+  }
+  
+  # Split data
+  dys_vals <- temp[[var]][temp$t1group == "Dysmenorrhea"]
+  hc_vals <- temp[[var]][temp$t1group == "Pain Free Control"]
+  obs_diff <- median(dys_vals) - median(hc_vals)
+  
+  # Combine all values and labels
+  combined_vals <- temp[[var]]
+  labels <- temp$t1group
+  
+  # Permutation test
+  n_perm <- 10000
+  perm_diffs <- replicate(n_perm, {
+    permuted_labels <- sample(labels)
+    median(combined_vals[permuted_labels == "Dysmenorrhea"]) -
+      median(combined_vals[permuted_labels == "Pain Free Control"])
+  })
+  
+  # Two-sided empirical p-value
+  p_perm <- mean(abs(perm_diffs) >= abs(obs_diff))
+  
+  data.frame(
+    Variable = var,
+    median_Dysmenorrhea = median(dys_vals),
+    median_Control = median(hc_vals),
+    observed_median_diff = obs_diff,
+    permutation_p_value = p_perm,
+    stringsAsFactors = FALSE
+  )
+})
+
+# Combine results into data frame
+permutation_median_df <- do.call(rbind, permutation_median_results)
+
+# Create a flextable
+ft2 <- flextable(permutation_median_df) %>%
+  bold(i = 1, part = "header") %>%
+  align(align = "left", part = "all") %>%
+  fontsize(size = 10, part = "all") %>%
+  set_table_properties(layout = "fixed", width = 1) %>%
+  theme_vanilla()
+
+read_docx() %>%
+  body_add_flextable(ft2) %>%
+  print(target = "table2f_permutation.docx")
+
+#Determine what % of groups have 0 contractions at both visits
+uca_m_s1_groups %>%
+  count(t1group)
+
+dys_zero <- uca_m_s1_groups %>%
+  filter(t1group == "Dysmenorrhea", avg_contractions_m_s1 == 0)
+
+dys_zero_half <- uca_m_s1_groups %>%
+  filter(t1group == "Dysmenorrhea", avg_contractions_m_s1 == 0.5)
+
+hc_zero <- uca_m_s1_groups %>%
+  filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0)
+
+hc_zero_half <- uca_m_s1_groups %>%
+  filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0.5)
+
 
 
 ##WAIT TO RUN UNTIL FINAL PARAMETERS DECIDED##
