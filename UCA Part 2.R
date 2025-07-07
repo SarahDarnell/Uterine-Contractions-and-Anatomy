@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 2 - EH19-040
-#Written by Sarah Darnell, began 5.2.25, lasted edited 5.12.25
+#Written by Sarah Darnell, began 5.2.25, lasted edited 7.7.25
 
 library(readr)
 library(dplyr)
@@ -235,7 +235,7 @@ eh19_clean <- as_tibble(eh19_wide)
 write_csv(eh19_clean, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/EH19-040_cleaned.csv")
 
 #load in contraction and anatomy data
-eh19_anatomy <- read_csv("eh19_anatomy.csv")
+eh19_anatomy <- read_csv("eh19_anatomy_FIX.csv") #7.7.25 using _FIX file per KMH
 
 #compute average of double-scored variables
 eh19_anatomy <- eh19_anatomy %>%

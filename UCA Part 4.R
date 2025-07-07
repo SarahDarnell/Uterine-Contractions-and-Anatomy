@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 4 - Full dataset - table 2s
-#Written by Sarah Darnell, began 5.15.25, lasted edited 6.12.25
+#Written by Sarah Darnell, began 5.15.25, lasted edited 7.7.25
 
 library(readr)
 library(tableone)
@@ -448,50 +448,6 @@ uca_m_s1 <- uca %>%
          `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_contractions_v2_s1
   ))
 
-#make new variable for avg contractions for eh16 and eh19, but only for dys w/
-#pain of 3 or higher, and HC with pain of 0. For eh19, take avg if pain at both
-#visits meets criteria, otherwise take only 1 visit. If neither meet, take none.
-uca_m_s1 <- uca %>%
-  mutate(avg_contractions_m_s1 = case_when(
-    #eh16, menses visit, dys with pain of 3 or above
-    t1group == "Dysmenorrhea" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` > 2 ~ 
-      avg_contractions_m, 
-    #eh16, menses visit, hc with pain of 0
-    t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
-      avg_contractions_m, 
-    #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
-    t1group == "Dysmenorrhea" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` > 2 & 
-      `Visit 2: Maximum cramping pain scan 1` > 2 ~ 
-      rowMeans(cbind(avg_contractions_v1_s1, avg_contractions_v2_s1), na.rm = TRUE), 
-    #eh19, scan 1 of v1 when v2 is NA or too low, dys with pain of 3 or above
-    t1group == "Dysmenorrhea" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` > 2 & 
-      (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` < 3) ~ avg_contractions_v1_s1,
-    #eh19, scan 1 of v2 when v1 is NA or too low, dys with pain of 3 or above
-    t1group == "Dysmenorrhea" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` > 2 & 
-      (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_contractions_v2_s1, 
-    #eh19, scan 1 of v1 and v2, hc with pain of 0
-    t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
-      rowMeans(cbind(avg_contractions_v1_s1, avg_contractions_v2_s1), na.rm = TRUE), 
-    #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
-    t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_contractions_v1_s1, 
-    #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
-    t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
-      (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_contractions_v2_s1
-  ))
 
 #make new variable for avg frame duration w/ same parameters
 uca_m_s1 <- uca_m_s1 %>%
@@ -787,7 +743,7 @@ ft2 <- flextable(table2f_full_n) %>%
 
 read_docx() %>%
   body_add_flextable(ft2) %>%
-  print(target = "table2f.docx")
+  print(target = "table2f_FIX.docx")
 
 #Welch's t-test
 
