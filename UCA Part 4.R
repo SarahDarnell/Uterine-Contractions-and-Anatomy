@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 4 - Full dataset - table 2s
-#Written by Sarah Darnell, began 5.15.25, lasted edited 7.7.25
+#Written by Sarah Darnell, began 5.15.25, lasted edited 7.8.25
 
 library(readr)
 library(tableone)
@@ -404,7 +404,7 @@ uca <- uca %>%
   #slice(c(167, 165, 66, 34, 63, 83))
 
 #make new variable for avg contractions for eh16 and eh19, but only for dys w/
-#pain of 3 or higher, and HC with pain of 0. For eh19, take avg if pain at both
+#pain of 3 or higher, and HC with pain of 1 or lower. For eh19, take avg if pain at both
 #visits meets criteria, otherwise take only 1 visit. If neither meet, take none.
 uca_m_s1 <- uca %>%
   mutate(avg_contractions_m_s1 = case_when(
@@ -414,7 +414,7 @@ uca_m_s1 <- uca %>%
       avg_contractions_m, 
     #eh16, menses visit, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan` < 2 ~ 
       avg_contractions_m, 
     #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
     t1group == "Dysmenorrhea" & study == "EH19" &
@@ -433,19 +433,19 @@ uca_m_s1 <- uca %>%
          `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_contractions_v2_s1, 
     #eh19, scan 1 of v1 and v2, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 ~ 
       rowMeans(cbind(avg_contractions_v1_s1, avg_contractions_v2_s1), na.rm = TRUE), 
     #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_contractions_v1_s1, 
+         `Visit 2: Maximum cramping pain scan 1` > 1) ~ avg_contractions_v1_s1, 
     #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_contractions_v2_s1
+         `Visit 1: Maximum cramping pain scan 1` > 1) ~ avg_contractions_v2_s1
   ))
 
 
@@ -458,7 +458,7 @@ uca_m_s1 <- uca_m_s1 %>%
       avg_frame_duration_m, 
     #eh16, menses visit, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan` < 2 ~ 
       avg_frame_duration_m, 
     #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
     t1group == "Dysmenorrhea" & study == "EH19" &
@@ -477,19 +477,19 @@ uca_m_s1 <- uca_m_s1 %>%
          `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_frame_duration_v2_s1, 
     #eh19, scan 1 of v1 and v2, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 ~ 
       rowMeans(cbind(avg_frame_duration_v1_s1, avg_frame_duration_v2_s1), na.rm = TRUE), 
     #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_frame_duration_v1_s1, 
+         `Visit 2: Maximum cramping pain scan 1` > 1) ~ avg_frame_duration_v1_s1, 
     #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_frame_duration_v2_s1
+         `Visit 1: Maximum cramping pain scan 1` > 1) ~ avg_frame_duration_v2_s1
   ))
 
 #make new variable for avg anterior jz w/ same parameters
@@ -501,7 +501,7 @@ uca_m_s1 <- uca_m_s1 %>%
       avg_anterior_jz_m, 
     #eh16, menses visit, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan` < 2 ~ 
       avg_anterior_jz_m, 
     #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
     t1group == "Dysmenorrhea" & study == "EH19" &
@@ -520,19 +520,19 @@ uca_m_s1 <- uca_m_s1 %>%
          `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_anterior_jz_v2_s1, 
     #eh19, scan 1 of v1 and v2, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 ~ 
       rowMeans(cbind(avg_anterior_jz_v1_s1, avg_anterior_jz_v2_s1), na.rm = TRUE), 
     #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_anterior_jz_v1_s1, 
+         `Visit 2: Maximum cramping pain scan 1` > 1) ~ avg_anterior_jz_v1_s1, 
     #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_anterior_jz_v2_s1
+         `Visit 1: Maximum cramping pain scan 1` > 1) ~ avg_anterior_jz_v2_s1
   ))
 
 #make new variable for avg anterior outer w/ same parameters
@@ -544,7 +544,7 @@ uca_m_s1 <- uca_m_s1 %>%
       avg_anterior_outer_m, 
     #eh16, menses visit, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan` < 2 ~ 
       avg_anterior_outer_m, 
     #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
     t1group == "Dysmenorrhea" & study == "EH19" &
@@ -563,19 +563,19 @@ uca_m_s1 <- uca_m_s1 %>%
          `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_anterior_outer_v2_s1, 
     #eh19, scan 1 of v1 and v2, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 ~ 
       rowMeans(cbind(avg_anterior_outer_v1_s1, avg_anterior_outer_v2_s1), na.rm = TRUE), 
     #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_anterior_outer_v1_s1, 
+         `Visit 2: Maximum cramping pain scan 1` > 1) ~ avg_anterior_outer_v1_s1, 
     #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_anterior_outer_v2_s1
+         `Visit 1: Maximum cramping pain scan 1` > 1) ~ avg_anterior_outer_v2_s1
   ))
 
 #make new variable for avg posterior jz w/ same parameters
@@ -587,7 +587,7 @@ uca_m_s1 <- uca_m_s1 %>%
       avg_posterior_jz_m, 
     #eh16, menses visit, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan` < 2 ~ 
       avg_posterior_jz_m, 
     #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
     t1group == "Dysmenorrhea" & study == "EH19" &
@@ -606,19 +606,19 @@ uca_m_s1 <- uca_m_s1 %>%
          `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_posterior_jz_v2_s1, 
     #eh19, scan 1 of v1 and v2, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 ~ 
       rowMeans(cbind(avg_posterior_jz_v1_s1, avg_posterior_jz_v2_s1), na.rm = TRUE), 
     #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_posterior_jz_v1_s1, 
+         `Visit 2: Maximum cramping pain scan 1` > 1) ~ avg_posterior_jz_v1_s1, 
     #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_posterior_jz_v2_s1
+         `Visit 1: Maximum cramping pain scan 1` > 1) ~ avg_posterior_jz_v2_s1
   ))
 
 #make new variable for avg posterior outer w/ same parameters
@@ -630,7 +630,7 @@ uca_m_s1 <- uca_m_s1 %>%
       avg_posterior_outer_m, 
     #eh16, menses visit, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH16" & 
-      `Menses Visit: Maximum cramping pain post scan` == 0 ~ 
+      `Menses Visit: Maximum cramping pain post scan` < 2 ~ 
       avg_posterior_outer_m, 
     #eh19, scan 1 of v1 and v2, dys with pain of 3 or above 
     t1group == "Dysmenorrhea" & study == "EH19" &
@@ -649,19 +649,19 @@ uca_m_s1 <- uca_m_s1 %>%
          `Visit 1: Maximum cramping pain scan 1` < 3) ~ avg_posterior_outer_v2_s1, 
     #eh19, scan 1 of v1 and v2, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
-      `Visit 2: Maximum cramping pain scan 1` == 0 ~ 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 ~ 
       rowMeans(cbind(avg_posterior_outer_v1_s1, avg_posterior_outer_v2_s1), na.rm = TRUE), 
     #eh19, scan 1 of v1 when v2 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 1: Maximum cramping pain scan 1` == 0 & 
+      `Visit 1: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 2: Maximum cramping pain scan 1`) | 
-         `Visit 2: Maximum cramping pain scan 1` > 0) ~ avg_posterior_outer_v1_s1, 
+         `Visit 2: Maximum cramping pain scan 1` > 1) ~ avg_posterior_outer_v1_s1, 
     #eh19, scan 1 of v2 when v1 is NA or too high, hc with pain of 0
     t1group == "Pain Free Control" & study == "EH19" &
-      `Visit 2: Maximum cramping pain scan 1` == 0 & 
+      `Visit 2: Maximum cramping pain scan 1` < 2 & 
       (is.na(`Visit 1: Maximum cramping pain scan 1`) | 
-         `Visit 1: Maximum cramping pain scan 1` > 0) ~ avg_posterior_outer_v2_s1
+         `Visit 1: Maximum cramping pain scan 1` > 1) ~ avg_posterior_outer_v2_s1
   ))
 
 #Define continuous variables for menses visits (eh16 and eh19), menses and s1 only
@@ -914,54 +914,44 @@ dys_zero_half <- uca_m_s1_groups %>%
 hc_zero <- uca_m_s1_groups %>%
   filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0)
 
+#Table 2 correlations to contractions 
 
-##WAIT TO RUN UNTIL FINAL PARAMETERS DECIDED##
-##Table 2a - median results and kruskal wallis results for dys and hc - menses only
+#Defining continuous variables
+median_vars <- c("Depression", "Anxiety", "Number of Body Pain Sites (0-19)",
+                 "Sleep Disturbance",
+                 "Number of pregnancies", 
+                 "Average menstrual pain (last 90 days without pain relievers)",
+                 "Fatigue")
 
-table2a <- uca %>%
-  select(all_of(contvar), t1group) %>%
-  filter(!t1group %in% c("Fibroid", "Endometriosis")) %>%
-  group_by(t1group) %>%
+#Creating table of continuous variables, with median [IQR]
+table_median <- uca_m_s1 %>%
+  filter(t1group %in% c("Pain Free Control", "Dysmenorrhea")) %>%
+  select(all_of(median_vars)) %>%
   summarize(across(everything(), ~ sprintf("%.1f [%.1f-%.1f]", 
                                            median(., na.rm = TRUE), 
                                            quantile(., 0.25, na.rm = TRUE),
-                                           quantile(., 0.75, na.rm = TRUE))),
-            .groups = "drop") %>%
-  pivot_longer(cols = -t1group, names_to = "Item", values_to = "Median [IQR]") %>% 
-  pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
+                                           quantile(., 0.75, na.rm = TRUE)))) %>%
+  pivot_longer(cols = everything(), names_to = "Item", values_to = "Median [IQR] or %")
 
-#kruskal wallis test
-uca_filtered_groups <- uca %>%
-  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
+#Creating table of continuous variables, with Spearman's correlations and p-values
 
-kw <- lapply(contvar, function(var) {
-  formula <- as.formula(paste(var, "~t1group"))
-  test_result <- kruskal.test(formula, data = uca_filtered_groups)
-  
+#avg_contractions_m_s1 spearman's calculations
+contraction_results <- lapply(median_vars, function(var) {
+  test_result <- cor.test(uca_m_s1$avg_contractions_m_s1, 
+                          uca_m_s1[[var]], method = "spearman", exact = FALSE)
+  rho <- test_result$estimate
+  p_value <- test_result$p.value
   data.frame(
-    Variable = var, 
-    Chi_Square = test_result$statistic, 
-    df = test_result$parameter, 
-    p_value = test_result$p.value, 
+    Item = var,
+    avg_contractions_m_s1 = rho,
+    p_value = p_value, 
     stringsAsFactors = FALSE
   )
 })
 
-kw_results <- do.call(rbind, kw)
+contraction_df <- do.call(rbind, contraction_results)
+rownames(contraction_df) <- NULL
 
-#combine into one table
-names(table2a)[1] <- "Variable"
+#combine spearman's with median values
+table_median_full <- merge(table_median, contraction_df, by = "Item")
 
-table2a_full <- left_join(table2a, kw_results, by = "Variable")
-
-# Create a flextable object
-ft2 <- flextable(table2a_full) %>%
-  bold(i = 1, part = "header") %>%               # Bold the header row
-  align(align = "left", part = "all") %>%         # Align left for all parts
-  fontsize(size = 10, part = "all") %>%           # Set font size
-  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
-  theme_vanilla()                                # Apply a vanilla theme
-
-read_docx() %>%
-  body_add_flextable(ft2) %>%
-  print(target = "table2a.docx")
