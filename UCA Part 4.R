@@ -914,14 +914,29 @@ dys_zero_half <- uca_m_s1_groups %>%
 hc_zero <- uca_m_s1_groups %>%
   filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0)
 
+
 #Table 2 correlations to contractions 
+
+#renaming variables for ease of reading
+uca_m_s1 <- uca_m_s1 %>%
+  rename('Diagnosed with Endometriosis' = werf_d8) %>%
+  rename('Current usage of Birth Control Pills' = mh16_bcps___1) %>%
+  rename('Past usage of Birth Control Pills' = mh17_bcps___1) %>%
+  rename('Bleeding amount on heaviest day of Menstrual Period' = werf_a2_10) %>%
+  rename('Bleeding amount on average during Menstrual Period' = werf_a2_11)
+
 
 #Defining continuous variables
 median_vars <- c("Depression", "Anxiety", "Number of Body Pain Sites (0-19)",
                  "Sleep Disturbance",
                  "Number of pregnancies", 
                  "Average menstrual pain (last 90 days without pain relievers)",
-                 "Fatigue")
+                 "Fatigue", "Worst menstrual pain last 12 months", 
+                 "Days of missed work/school/activities due to menstrual pain (last 90 days)", 
+                 "Average length of menstrual cycle", "Average length of menstrual period",
+                 "Number of deliveries", "Bleeding amount on heaviest day of Menstrual Period", 
+                 "Bleeding amount on average during Menstrual Period", 
+                 "Worst menstrual pain last 12 months")
 
 #Creating table of continuous variables, with median [IQR]
 table_median <- uca_m_s1 %>%
@@ -955,3 +970,46 @@ rownames(contraction_df) <- NULL
 #combine spearman's with median values
 table_median_full <- merge(table_median, contraction_df, by = "Item")
 
+#Defining yes/no variables
+yes_vars <- c("Migraine Headaches", "Painful Bladder Syndrome or Interstitial Cystitis", 
+              "Chronic Pelvic Pain", "Inflammatory Bowel Disease", "Diabetes", 
+              "Diagnosed with Endometriosis", "Current usage of Birth Control Pills", 
+              "Past usage of Birth Control Pills")
+
+#Creating table of yes/no variables, with %yes
+table_yes <- uca_m_s1 %>%
+  select(all_of(yes_vars)) %>%
+  summarize(across(everything(), ~ {
+    count_yes <- sum(., na.rm = TRUE)  
+    total <- length(na.omit(.))  
+    percent_yes <- (count_yes / total) * 100  # Percentage of "Yes"
+    sprintf("%.1f%%", percent_yes)  # Format percentage to one decimal place
+  })) %>%
+  pivot_longer(cols = everything(), names_to = "Item", values_to = "Median [IQR] or %")
+
+#Creating table of continuous variables, with kendall tau's and p-values
+
+#avg_contractions_m_s1 spearman's calculations
+contraction_results_yes <- lapply(yes_vars, function(var) {
+  test_result <- cor.test(uca_m_s1$avg_contractions_m_s1, uca_m_s1[[var]], 
+                          method = "kendall", exact = FALSE)
+  tau <- test_result$estimate
+  p_value <- test_result$p.value
+  data.frame(
+    Item = var,
+    avg_contractions_m_s1 = tau,
+    p_value = p_value, 
+    stringsAsFactors = FALSE
+  )
+})
+
+contraction_df_yes <- do.call(rbind, contraction_results_yes)
+rownames(contraction_df_yes) <- NULL
+
+#combine kendall tau's with %yes values
+table_yes_full <- merge(table_yes, contraction_df_yes, by = "Item")
+
+#combine continuous table with %yes table
+table_2_corr <- bind_rows(table_median_full, table_yes_full)
+
+#need to do a pull for FU pain, days in bed, and bladder sensitivity?
