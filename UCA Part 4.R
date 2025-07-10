@@ -1,5 +1,5 @@
 #Uterine Contractions and Anatomy Analysis - Part 4 - Full dataset - table 2s
-#Written by Sarah Darnell, began 5.15.25, lasted edited 7.8.25
+#Written by Sarah Darnell, began 5.15.25, lasted edited 7.10.25
 
 library(readr)
 library(tableone)
@@ -19,50 +19,24 @@ uca <- read_csv("uca_final.csv")
 #Convert t1group to a factor 
 uca$t1group <- as.factor(uca$t1group)
 
+##Tables 2c-e will help determine what will be in final 2a##
+#These only include DYS and HC
+
 #Define continuous variables for menses visits (eh16 and eh19)
 contvar_m <- c("avg_contractions_m", "avg_frame_duration_m", "avg_anterior_jz_m", 
-            "avg_anterior_outer_m", "avg_posterior_jz_m", "avg_posterior_outer_m",
-            "avg_contractions_v1_s1", "avg_frame_duration_v1_s1", "avg_anterior_jz_v1_s1", 
-            "avg_anterior_outer_v1_s1", "avg_posterior_jz_v1_s1", "avg_posterior_outer_v1_s1", 
-            "avg_contractions_v1_s2", "avg_frame_duration_v1_s2", "avg_anterior_jz_v1_s2", 
-            "avg_anterior_outer_v1_s2", "avg_posterior_jz_v1_s2", "avg_posterior_outer_v1_s2", 
-            "avg_contractions_v2_s1", "avg_frame_duration_v2_s1", "avg_anterior_jz_v2_s1", 
-            "avg_anterior_outer_v2_s1", "avg_posterior_jz_v2_s1", "avg_posterior_outer_v2_s1", 
-            "avg_contractions_v2_s2", "avg_frame_duration_v2_s2", "avg_anterior_jz_v2_s2", 
-            "avg_anterior_outer_v2_s2", "avg_posterior_jz_v2_s2", "avg_posterior_outer_v2_s2")
+               "avg_anterior_outer_m", "avg_posterior_jz_m", "avg_posterior_outer_m",
+               "avg_contractions_v1_s1", "avg_frame_duration_v1_s1", "avg_anterior_jz_v1_s1", 
+               "avg_anterior_outer_v1_s1", "avg_posterior_jz_v1_s1", "avg_posterior_outer_v1_s1", 
+               "avg_contractions_v1_s2", "avg_frame_duration_v1_s2", "avg_anterior_jz_v1_s2", 
+               "avg_anterior_outer_v1_s2", "avg_posterior_jz_v1_s2", "avg_posterior_outer_v1_s2", 
+               "avg_contractions_v2_s1", "avg_frame_duration_v2_s1", "avg_anterior_jz_v2_s1", 
+               "avg_anterior_outer_v2_s1", "avg_posterior_jz_v2_s1", "avg_posterior_outer_v2_s1", 
+               "avg_contractions_v2_s2", "avg_frame_duration_v2_s2", "avg_anterior_jz_v2_s2", 
+               "avg_anterior_outer_v2_s2", "avg_posterior_jz_v2_s2", "avg_posterior_outer_v2_s2")
 
 #Define continuous variables for nonmenses (eh16 only)
 contvar_nm <- c("avg_contractions_nm", "avg_frame_duration_nm", "avg_anterior_jz_nm", 
-            "avg_anterior_outer_nm", "avg_posterior_jz_nm", "avg_posterior_outer_nm")
-
-
-##Table 2b - median results from endo and fibroid groups, menses only##
-table2b <- uca %>%
-  select(all_of(contvar_m), t1group) %>%
-  filter(t1group %in% c("Endometriosis", "Fibroid")) %>%
-  pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
-  group_by(t1group, Item) %>%
-  dplyr::summarize(`Median [IQR]` = sprintf("%.1f [%.1f-%.1f]", 
-                                           median(Value, na.rm = TRUE), 
-                                           quantile(Value, 0.25, na.rm = TRUE),
-                                           quantile(Value, 0.75, na.rm = TRUE)),
-            .groups = "drop") %>%
-  pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
-
-# Create a flextable object
-ft <- flextable(table2b) %>%
-  bold(i = 1, part = "header") %>%               # Bold the header row
-  align(align = "left", part = "all") %>%         # Align left for all parts
-  fontsize(size = 10, part = "all") %>%           # Set font size
-  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
-  theme_vanilla()                                # Apply a vanilla theme
-
-read_docx() %>%
-  body_add_flextable(ft) %>%
-  print(target = "table2b.docx")
-
-##Tables 2c-e will help determine what will be in final 2a##
-#These only include DYS and HC
+                "avg_anterior_outer_nm", "avg_posterior_jz_nm", "avg_posterior_outer_nm")
 
 #table 2c - nonmenses data (eh16 only) for contvars
 table2c <- uca %>%
@@ -347,10 +321,6 @@ read_docx() %>%
   body_add_flextable(ft2) %>%
   print(target = "table2e.docx")
 
-#table 2f - menses visits only, HC pain must be 0, and DYS pain must be 3 or above
-#new variable that takes average of scan 1 pain across eh19 visits 1 and 2, and 
-#menses pain from eh16
-
 #make new variable called menses_scan_1_pain, this isn't in table, just for info
 uca <- uca %>%
   mutate(menses_scan_1_pain = case_when(
@@ -403,6 +373,7 @@ uca <- uca %>%
   #ungroup() %>%
   #slice(c(167, 165, 66, 34, 63, 83))
 
+#Final table 2a
 #make new variable for avg contractions for eh16 and eh19, but only for dys w/
 #pain of 3 or higher, and HC with pain of 1 or lower. For eh19, take avg if pain at both
 #visits meets criteria, otherwise take only 1 visit. If neither meet, take none.
@@ -668,7 +639,7 @@ uca_m_s1 <- uca_m_s1 %>%
 contvar_m_s1 <- c("avg_contractions_m_s1", "avg_frame_duration_m_s1", "avg_anterior_jz_m_s1", 
                   "avg_anterior_outer_m_s1", "avg_posterior_jz_m_s1", "avg_posterior_outer_m_s1")
 
-table2f <- uca_m_s1 %>%
+table2a <- uca_m_s1 %>%
   select(all_of(contvar_m_s1), t1group) %>%
   filter(t1group %in% c("Dysmenorrhea", "Pain Free Control")) %>%
   pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
@@ -707,9 +678,9 @@ kw_results <- kw_results %>%
 
 
 #combine into one table
-names(table2f)[1] <- "Variable"
+names(table2a)[1] <- "Variable"
 
-table2f_full <- left_join(table2f, kw_results, by = "Variable")
+table2a_full <- left_join(table2a, kw_results, by = "Variable")
 
 #add in n per group per variable
 n_long <- uca_m_s1 %>%
@@ -724,8 +695,8 @@ n_long <- uca_m_s1 %>%
     HC_n = `Pain Free Control`
   )
 
-# merge into table 2f
-table2f_full_n <- table2f_full %>%
+# merge into table 2a
+table2a_full_n <- table2a_full %>%
   left_join(n_long, by = "Variable") %>%
   mutate(
     Dysmenorrhea = paste0(Dysmenorrhea, " (n=", DYS_n, ")"),
@@ -734,7 +705,7 @@ table2f_full_n <- table2f_full %>%
   select(Variable, Dysmenorrhea, `Pain Free Control`, Chi_Square, p_value)
 
 # Create a flextable object
-ft2 <- flextable(table2f_full_n) %>%
+ft2 <- flextable(table2a_full_n) %>%
   bold(i = 1, part = "header") %>%               # Bold the header row
   align(align = "left", part = "all") %>%         # Align left for all parts
   fontsize(size = 10, part = "all") %>%           # Set font size
@@ -743,179 +714,29 @@ ft2 <- flextable(table2f_full_n) %>%
 
 read_docx() %>%
   body_add_flextable(ft2) %>%
-  print(target = "table2f_FIX.docx")
+  print(target = "table2a.docx")
 
-#Welch's t-test
+#Table 2c correlations to contractions 
 
-uca_m_s1_groups <- uca_m_s1 %>%
-  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
+#import supplementary vars for eh16
+eh16_sup <- read_csv("eh16_sup_vars.csv", 
+                     col_types = cols(redcap_event_name = col_skip()))
 
-ttest_results <- lapply(contvar_m_s1, function(var) {
-  formula <- as.formula(paste(var, "~t1group"))
-  temp <- uca_m_s1_groups[, c(var, "t1group")]
-  temp <- temp[complete.cases(temp), ]  # remove NAs
-  
-  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
-    return(NULL)
-  }
-  # Perform Welch's t-test (handles unequal variances)
-  test_result <- t.test(formula, data = temp, var.equal = TRUE)
-  
-  data.frame(
-    Variable = var,
-    t_statistic = test_result$statistic,
-    df = test_result$parameter,
-    p_value = test_result$p.value,
-    mean_Dysmenorrhea = mean(temp[[var]][temp$t1group == "Dysmenorrhea"]),
-    mean_Control = mean(temp[[var]][temp$t1group == "Pain Free Control"]),
-    stringsAsFactors = FALSE
-  )
-})
+eh16_sup <- eh16_sup %>%
+  mutate(record_number = record_number + 2000)
 
-# Combine into a single data frame
-ttest_df <- do.call(rbind, ttest_results)
+#import supplementary vars for eh19
+eh19_sup <- read_csv("eh19_sup_vars.csv", 
+                     col_types = cols(redcap_event_name = col_skip()))
 
-# Create a flextable object
-ft2 <- flextable(ttest_df) %>%
-  bold(i = 1, part = "header") %>%               # Bold the header row
-  align(align = "left", part = "all") %>%         # Align left for all parts
-  fontsize(size = 10, part = "all") %>%           # Set font size
-  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
-  theme_vanilla()                                # Apply a vanilla theme
+eh19_sup <- eh19_sup %>%
+  mutate(record_number = ps_record_id + 3000) %>%
+  select(-1)
 
-read_docx() %>%
-  body_add_flextable(ft2) %>%
-  print(target = "table2f_parametric_v2.docx")
+#merge supplementary vars
+sup_vars <- merge(eh16_sup, eh19_sup, all = TRUE)
 
-
-#boot strap test
-set.seed(123)  # for reproducibility
-
-bootstrap_median_results <- lapply(contvar_m_s1, function(var) {
-  temp <- uca_m_s1_groups[, c(var, "t1group")]
-  temp <- temp[complete.cases(temp), ]
-  
-  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
-    return(NULL)
-  }
-  
-  # Split data
-  dys_vals <- temp[[var]][temp$t1group == "Dysmenorrhea"]
-  hc_vals <- temp[[var]][temp$t1group == "Pain Free Control"]
-  
-  # Observed difference in medians
-  obs_diff <- median(dys_vals) - median(hc_vals)
-  
-  # Bootstrap sampling
-  n_boot <- 10000
-  boot_diffs <- replicate(n_boot, {
-    median(sample(dys_vals, replace = TRUE)) - median(sample(hc_vals, replace = TRUE))
-  })
-  
-  # Two-sided p-value
-  p_boot <- mean(abs(boot_diffs) >= abs(obs_diff))
-  
-  data.frame(
-    Variable = var,
-    median_Dysmenorrhea = median(dys_vals),
-    median_Control = median(hc_vals),
-    observed_median_diff = obs_diff,
-    bootstrap_p_value = p_boot,
-    stringsAsFactors = FALSE
-  )
-})
-
-# Combine results into data frame
-bootstrap_median_df <- do.call(rbind, bootstrap_median_results)
-
-# Create a flextable object
-ft2 <- flextable(bootstrap_median_df) %>%
-  bold(i = 1, part = "header") %>%               # Bold the header row
-  align(align = "left", part = "all") %>%         # Align left for all parts
-  fontsize(size = 10, part = "all") %>%           # Set font size
-  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
-  theme_vanilla()                                # Apply a vanilla theme
-
-read_docx() %>%
-  body_add_flextable(ft2) %>%
-  print(target = "table2f_bootstrap.docx")
-
-#permutation
-set.seed(123)  # for reproducibility
-
-# Permutation test of median differences
-permutation_median_results <- lapply(contvar_m_s1, function(var) {
-  temp <- uca_m_s1_groups[, c(var, "t1group")]
-  temp <- temp[complete.cases(temp), ]
-  
-  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
-    return(NULL)
-  }
-  
-  # Split data
-  dys_vals <- temp[[var]][temp$t1group == "Dysmenorrhea"]
-  hc_vals <- temp[[var]][temp$t1group == "Pain Free Control"]
-  obs_diff <- median(dys_vals) - median(hc_vals)
-  
-  # Combine all values and labels
-  combined_vals <- temp[[var]]
-  labels <- temp$t1group
-  
-  # Permutation test
-  n_perm <- 10000
-  perm_diffs <- replicate(n_perm, {
-    permuted_labels <- sample(labels)
-    median(combined_vals[permuted_labels == "Dysmenorrhea"]) -
-      median(combined_vals[permuted_labels == "Pain Free Control"])
-  })
-  
-  # Two-sided empirical p-value
-  p_perm <- mean(abs(perm_diffs) >= abs(obs_diff))
-  
-  data.frame(
-    Variable = var,
-    median_Dysmenorrhea = median(dys_vals),
-    median_Control = median(hc_vals),
-    observed_median_diff = obs_diff,
-    permutation_p_value = p_perm,
-    stringsAsFactors = FALSE
-  )
-})
-
-# Combine results into data frame
-permutation_median_df <- do.call(rbind, permutation_median_results)
-
-# Create a flextable
-ft2 <- flextable(permutation_median_df) %>%
-  bold(i = 1, part = "header") %>%
-  align(align = "left", part = "all") %>%
-  fontsize(size = 10, part = "all") %>%
-  set_table_properties(layout = "fixed", width = 1) %>%
-  theme_vanilla()
-
-read_docx() %>%
-  body_add_flextable(ft2) %>%
-  print(target = "table2f_permutation.docx")
-
-#Determine what % of groups have 0 contractions at both visits
-uca_m_s1_groups %>%
-  count(t1group)
-
-contractions <- uca_m_s1_groups %>%
-  select(122, 163, 175, 200, 202)
-
-dys_zero <- uca_m_s1_groups %>%
-  filter(t1group == "Dysmenorrhea"& avg_contractions_m_s1 == 0)
-
-dys_zero_half <- uca_m_s1_groups %>%
-  filter(t1group == "Dysmenorrhea" & avg_contractions_m_s1 > 0 &
-           (avg_contractions_v1_s1 == 0 | avg_contractions_v2_s1 == 0))
-
-hc_zero <- uca_m_s1_groups %>%
-  filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0)
-
-
-#Table 2 correlations to contractions 
+uca_m_s1 <- merge(uca_m_s1, sup_vars, all = TRUE)
 
 #renaming variables for ease of reading
 uca_m_s1 <- uca_m_s1 %>%
@@ -923,8 +744,15 @@ uca_m_s1 <- uca_m_s1 %>%
   rename('Current usage of Birth Control Pills' = mh16_bcps___1) %>%
   rename('Past usage of Birth Control Pills' = mh17_bcps___1) %>%
   rename('Bleeding amount on heaviest day of Menstrual Period' = werf_a2_10) %>%
-  rename('Bleeding amount on average during Menstrual Period' = werf_a2_11)
+  rename('Bleeding amount on average during Menstrual Period' = werf_a2_11) %>%
+  rename('Days spend in bed due to period pain (last 90 days)' = mh22) %>%
+  rename('Bladder pain at first urge to urinate' = rbt5c_fu_pain)
 
+#converting back to a tibble
+uca_m_s1 <- as_tibble(uca_m_s1)
+
+#saving file
+write_csv(uca_m_s1, "C:/Users/Eli S/Documents/Sarah work stuff/2025 Data Projects/Uterine Contractions and Anatomy/uca_m_s1.csv")           
 
 #Defining continuous variables
 median_vars <- c("Depression", "Anxiety", "Number of Body Pain Sites (0-19)",
@@ -936,7 +764,8 @@ median_vars <- c("Depression", "Anxiety", "Number of Body Pain Sites (0-19)",
                  "Average length of menstrual cycle", "Average length of menstrual period",
                  "Number of deliveries", "Bleeding amount on heaviest day of Menstrual Period", 
                  "Bleeding amount on average during Menstrual Period", 
-                 "Worst menstrual pain last 12 months")
+                 "Worst menstrual pain last 12 months", "Bladder pain at first urge to urinate", 
+                 "Days spend in bed due to period pain (last 90 days)")
 
 #Creating table of continuous variables, with median [IQR]
 table_median <- uca_m_s1 %>%
@@ -1012,4 +841,210 @@ table_yes_full <- merge(table_yes, contraction_df_yes, by = "Item")
 #combine continuous table with %yes table
 table_2_corr <- bind_rows(table_median_full, table_yes_full)
 
-#need to do a pull for FU pain, days in bed, and bladder sensitivity?
+# Create a flextable object
+ft2 <- flextable(table_2_corr) %>%
+  bold(i = 1, part = "header") %>%               # Bold the header row
+  align(align = "left", part = "all") %>%         # Align left for all parts
+  fontsize(size = 10, part = "all") %>%           # Set font size
+  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+  theme_vanilla()                                # Apply a vanilla theme
+
+read_docx() %>%
+  body_add_flextable(ft2) %>%
+  print(target = "table2c.docx")
+
+##Table 2b - median results from endo and fibroid groups, menses only##
+table2b <- uca %>%
+  select(all_of(contvar_m), t1group) %>%
+  filter(t1group %in% c("Endometriosis", "Fibroid")) %>%
+  pivot_longer(cols = -t1group, names_to = "Item", values_to = "Value") %>% 
+  group_by(t1group, Item) %>%
+  dplyr::summarize(`Median [IQR]` = sprintf("%.1f [%.1f-%.1f]", 
+                                            median(Value, na.rm = TRUE), 
+                                            quantile(Value, 0.25, na.rm = TRUE),
+                                            quantile(Value, 0.75, na.rm = TRUE)),
+                   .groups = "drop") %>%
+  pivot_wider(names_from = t1group, values_from = `Median [IQR]`) 
+
+# Create a flextable object
+ft <- flextable(table2b) %>%
+  bold(i = 1, part = "header") %>%               # Bold the header row
+  align(align = "left", part = "all") %>%         # Align left for all parts
+  fontsize(size = 10, part = "all") %>%           # Set font size
+  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+  theme_vanilla()                                # Apply a vanilla theme
+
+read_docx() %>%
+  body_add_flextable(ft) %>%
+  print(target = "table2b.docx")
+
+
+#uncomment to view various stat tests
+#Welch's t-test
+
+#uca_m_s1_groups <- uca_m_s1 %>%
+#  filter(t1group %in% c("Dysmenorrhea", "Pain Free Control"))
+
+#ttest_results <- lapply(contvar_m_s1, function(var) {
+#  formula <- as.formula(paste(var, "~t1group"))
+#  temp <- uca_m_s1_groups[, c(var, "t1group")]
+#  temp <- temp[complete.cases(temp), ]  # remove NAs
+
+#  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+#    return(NULL)
+#  }
+#  # Perform Welch's t-test (handles unequal variances)
+#  test_result <- t.test(formula, data = temp, var.equal = TRUE)
+
+#  data.frame(
+#    Variable = var,
+#    t_statistic = test_result$statistic,
+#    df = test_result$parameter,
+#    p_value = test_result$p.value,
+#    mean_Dysmenorrhea = mean(temp[[var]][temp$t1group == "Dysmenorrhea"]),
+#    mean_Control = mean(temp[[var]][temp$t1group == "Pain Free Control"]),
+#    stringsAsFactors = FALSE
+#  )
+#})
+
+## Combine into a single data frame
+#ttest_df <- do.call(rbind, ttest_results)
+
+## Create a flextable object
+#ft2 <- flextable(ttest_df) %>%
+#  bold(i = 1, part = "header") %>%               # Bold the header row
+#  align(align = "left", part = "all") %>%         # Align left for all parts
+#  fontsize(size = 10, part = "all") %>%           # Set font size
+#  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+#  theme_vanilla()                                # Apply a vanilla theme
+#
+#read_docx() %>%
+#  body_add_flextable(ft2) %>%
+#  print(target = "table2f_parametric_v2.docx")
+
+
+##boot strap test
+#set.seed(123)  # for reproducibility
+
+#bootstrap_median_results <- lapply(contvar_m_s1, function(var) {
+#  temp <- uca_m_s1_groups[, c(var, "t1group")]
+#  temp <- temp[complete.cases(temp), ]
+
+#  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+#    return(NULL)
+#  }
+
+#  # Split data
+#  dys_vals <- temp[[var]][temp$t1group == "Dysmenorrhea"]
+#  hc_vals <- temp[[var]][temp$t1group == "Pain Free Control"]
+
+#  # Observed difference in medians
+#  obs_diff <- median(dys_vals) - median(hc_vals)
+
+#  # Bootstrap sampling
+#  n_boot <- 10000
+#  boot_diffs <- replicate(n_boot, {
+#    median(sample(dys_vals, replace = TRUE)) - median(sample(hc_vals, replace = TRUE))
+#  })
+
+#  # Two-sided p-value
+#  p_boot <- mean(abs(boot_diffs) >= abs(obs_diff))
+
+#  data.frame(
+#    Variable = var,
+#    median_Dysmenorrhea = median(dys_vals),
+#    median_Control = median(hc_vals),
+#    observed_median_diff = obs_diff,
+#    bootstrap_p_value = p_boot,
+#    stringsAsFactors = FALSE
+#  )
+#})
+
+## Combine results into data frame
+#bootstrap_median_df <- do.call(rbind, bootstrap_median_results)
+
+## Create a flextable object
+#ft2 <- flextable(bootstrap_median_df) %>%
+#  bold(i = 1, part = "header") %>%               # Bold the header row
+#  align(align = "left", part = "all") %>%         # Align left for all parts
+#  fontsize(size = 10, part = "all") %>%           # Set font size
+#  set_table_properties(layout = "fixed", width = 1) %>% # Fixed width layout
+#  theme_vanilla()                                # Apply a vanilla theme
+
+#read_docx() %>%
+#  body_add_flextable(ft2) %>%
+#  print(target = "table2f_bootstrap.docx")
+
+##permutation
+#set.seed(123)  # for reproducibility
+
+## Permutation test of median differences
+#permutation_median_results <- lapply(contvar_m_s1, function(var) {
+#  temp <- uca_m_s1_groups[, c(var, "t1group")]
+#  temp <- temp[complete.cases(temp), ]
+
+#  if (length(unique(temp$t1group)) < 2 || length(unique(temp[[var]])) < 2) {
+#    return(NULL)
+#  }
+
+#  # Split data
+#  dys_vals <- temp[[var]][temp$t1group == "Dysmenorrhea"]
+#  hc_vals <- temp[[var]][temp$t1group == "Pain Free Control"]
+#  obs_diff <- median(dys_vals) - median(hc_vals)
+
+#  # Combine all values and labels
+#  combined_vals <- temp[[var]]
+#  labels <- temp$t1group
+
+#  # Permutation test
+#  n_perm <- 10000
+#  perm_diffs <- replicate(n_perm, {
+#    permuted_labels <- sample(labels)
+#    median(combined_vals[permuted_labels == "Dysmenorrhea"]) -
+#      median(combined_vals[permuted_labels == "Pain Free Control"])
+#  })
+
+#  # Two-sided empirical p-value
+#  p_perm <- mean(abs(perm_diffs) >= abs(obs_diff))
+
+#  data.frame(
+#    Variable = var,
+#    median_Dysmenorrhea = median(dys_vals),
+#    median_Control = median(hc_vals),
+#    observed_median_diff = obs_diff,
+#    permutation_p_value = p_perm,
+#    stringsAsFactors = FALSE
+# )
+#})
+
+## Combine results into data frame
+#permutation_median_df <- do.call(rbind, permutation_median_results)
+
+## Create a flextable
+#ft2 <- flextable(permutation_median_df) %>%
+#  bold(i = 1, part = "header") %>%
+#  align(align = "left", part = "all") %>%
+#  fontsize(size = 10, part = "all") %>%
+#  set_table_properties(layout = "fixed", width = 1) %>%
+#  theme_vanilla()
+
+#read_docx() %>%
+#  body_add_flextable(ft2) %>%
+#  print(target = "table2f_permutation.docx")
+
+##Determine what % of groups have 0 contractions at both visits
+#uca_m_s1_groups %>%
+#  count(t1group)
+
+#contractions <- uca_m_s1_groups %>%
+#  select(122, 163, 175, 200, 202)
+
+#dys_zero <- uca_m_s1_groups %>%
+#  filter(t1group == "Dysmenorrhea"& avg_contractions_m_s1 == 0)
+
+#dys_zero_half <- uca_m_s1_groups %>%
+#  filter(t1group == "Dysmenorrhea" & avg_contractions_m_s1 > 0 &
+#           (avg_contractions_v1_s1 == 0 | avg_contractions_v2_s1 == 0))
+
+#hc_zero <- uca_m_s1_groups %>%
+#  filter(t1group == "Pain Free Control", avg_contractions_m_s1 == 0)
